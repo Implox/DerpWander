@@ -15,10 +15,12 @@ type GraphicsWindow (world : World) as this =
     let atlas = 
         new System.Drawing.Bitmap (System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream "Atlas.png")
 
-    let derpSprite  = copyBitmapRegion atlas (new Rectangle (0, 0, 8, 8))
-    let foodSprite  = copyBitmapRegion atlas (new Rectangle (8, 0, 8, 8))
-    let wallSprite  = copyBitmapRegion atlas (new Rectangle (0, 8, 8, 8))
-    let blankSprite = copyBitmapRegion atlas (new Rectangle (8, 8, 8, 8))
+    let derpNorthSprite = copyBitmapRegion atlas (new Rectangle (0,  0, 8, 8))
+    let derpSouthSprite = copyBitmapRegion atlas (new Rectangle (8,  0, 8, 8))
+    let derpEastSprite  = copyBitmapRegion atlas (new Rectangle (16, 0, 8, 8))
+    let derpWestSprite  = copyBitmapRegion atlas (new Rectangle (24, 0, 8, 8))
+    let foodSprite      = copyBitmapRegion atlas (new Rectangle (32, 0, 8, 8))
+    let blankSprite     = copyBitmapRegion atlas (new Rectangle (40, 0, 8, 8))
 
     do
         this.Text <- "DerpWander"
@@ -42,8 +44,12 @@ type GraphicsWindow (world : World) as this =
             for y = 0 to world.Size - 1 do
                 let point = Point (x * 8, y * 8)
                 match world.Map.[x, y] with
-                | Derp _ ->
-                    e.Graphics.DrawImageUnscaled (derpSprite, point)
+                | Derp derp ->
+                    match derp.Orientation with
+                    | Orientation.North -> e.Graphics.DrawImageUnscaled (derpNorthSprite, point)
+                    | Orientation.South -> e.Graphics.DrawImageUnscaled (derpSouthSprite, point)
+                    | Orientation.East  -> e.Graphics.DrawImageUnscaled (derpEastSprite,  point)
+                    | Orientation.West  -> e.Graphics.DrawImageUnscaled (derpWestSprite,  point)
                 | Food ->
                     e.Graphics.DrawImageUnscaled (foodSprite, point)
                 | Empty ->

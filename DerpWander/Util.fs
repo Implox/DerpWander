@@ -26,6 +26,7 @@ module Array =
         let window = Seq.windowed n col
         [| for i = 0 to (Seq.length window) - 1 do if i % n = 0 then yield Seq.nth i window |]
 
+
 let rand = new Random ()
 
 /// Returns the integer and fractional parts of a float as (frac, int).
@@ -41,3 +42,5 @@ let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =
     g.DrawImageUnscaledAndClipped (srcMap, Rectangle(-region.X, -region.Y, srcMap.Width, srcMap.Height))
     g.Dispose ()
     newMap
+
+let inline tupleAdd (ax, ay : int * int) (bx, by : int * int) = (ax + bx, ay + by)

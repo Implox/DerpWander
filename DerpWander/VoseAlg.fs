@@ -26,7 +26,7 @@ let alias pa =
             pa.[k] <- (pa.[k] + pa.[j] - 1.0)
             if pa.[k] > 1.0 then init r pa (small, k :: large)
             else init r pa (k :: small, large)
-        | j :: small, [] ->
+         | j :: small, [] ->
             r.prob.[j] <- 1.0
             init r pa (small, [])
         | [], k :: large ->

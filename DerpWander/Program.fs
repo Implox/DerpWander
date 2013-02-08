@@ -10,11 +10,14 @@ open Window
 
 [<STAThread; EntryPoint>]
 let main args =
-    let world = new World (new OptionSet (GrowthPatternOption.Clumps, 
+    let world = new World (new OptionSet (64,
+                                          50,
+                                          4,
+                                          GrowthPatternOption.Clumps, 
                                           PlantRespawnOption.Never, 
                                           DerpRespawnOption.Random, 
                                           GenSpeedOption.Slowest))
-    let updateTime = world.UpdateSpeed
+    let updateTime = world.Options.Speed
 
     Application.EnableVisualStyles ()
     let window = new GraphicsWindow (world)

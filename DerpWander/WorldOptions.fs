@@ -3,6 +3,14 @@
 open PlantOptionAlg
 open DerpOptionAlg
 
+type WorldSize = int
+
+/// The number of states in each Derp's brain.
+type StateCount = int
+
+/// The number of Derps in a world.
+type DerpCount = int
+
 /// Flags for plant growth patterns in the world.
 type GrowthPatternOption =
     | Clumps
@@ -59,7 +67,10 @@ with
         | Slowest   -> 2000
 
 /// Represents a complete set of options for a World.
-type OptionSet (growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, derpRespawnOption : DerpRespawnOption, speedOption : GenSpeedOption) = 
+type OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateCount, growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, derpRespawnOption : DerpRespawnOption, speedOption : GenSpeedOption) = 
+    member this.WorldSize = worldSize
+    member this.DerpCount = derpCount
+    member this.StateCount = stateCount
     member this.PlantGrowthFunc = GrowthPatternOption.Match growthOption
     member this.PlantRespawnFunc = PlantRespawnOption.Match plantRespawnOption
     member this.DerpRespawnOp = DerpRespawnOption.Match derpRespawnOption
