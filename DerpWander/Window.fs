@@ -30,7 +30,9 @@ type GraphicsWindow (world : World) as this =
         this.SetStyle (ControlStyles.UserPaint, true)
         this.SetStyle (ControlStyles.OptimizedDoubleBuffer, true)
 
-    member this.Update () = ()
+    member this.Update () =
+        world.Update ()
+        this.Invalidate ()
         
 
     override this.OnKeyUp e =

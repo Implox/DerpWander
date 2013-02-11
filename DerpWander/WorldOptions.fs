@@ -60,7 +60,8 @@ with
     /// Resolves a GenSpeedOption to a value in miliseconds per frame.
     static member Match (speedOption : GenSpeedOption) =
         match speedOption with
-        | Fastest   -> 125
+        | Fastest   -> 50
+        | Faster    -> 125
         | Fast      -> 250
         | Normal    -> 500
         | Slow      -> 1000

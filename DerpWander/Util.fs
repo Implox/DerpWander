@@ -30,10 +30,13 @@ module Array =
 let rand = new Random ()
 
 /// Returns the integer and fractional parts of a float as (frac, int).
-let modf (x : float) = (x - (int >> float) x, (int >> float) x)
+let inline modf (x : float) = (x - (int >> float) x, (int >> float) x)
 
 /// Checks if a point is within the bounds of a grid
-let isInBounds x y width height = (0 <= x && x < width) && (0 <= y && y < height)
+let inline isInBounds x y width height = (0 <= x && x < width) && (0 <= y && y < height)
+
+/// Adds two tuples together
+let inline tupleAdd ((ax, ay) : int * int) ((bx, by) : int * int) = (ax + bx, ay + by)
 
 /// Creates a new bitmap which contains a given region within a given bitmap.
 let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =
@@ -42,5 +45,3 @@ let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =
     g.DrawImageUnscaledAndClipped (srcMap, Rectangle(-region.X, -region.Y, srcMap.Width, srcMap.Height))
     g.Dispose ()
     newMap
-
-let inline tupleAdd (ax, ay : int * int) (bx, by : int * int) = (ax + bx, ay + by)

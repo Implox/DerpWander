@@ -16,7 +16,7 @@ let main args =
                                           GrowthPatternOption.Clumps, 
                                           PlantRespawnOption.Never, 
                                           DerpRespawnOption.Random, 
-                                          GenSpeedOption.Slowest))
+                                          GenSpeedOption.Fastest))
     let updateTime = world.Options.Speed
 
     Application.EnableVisualStyles ()
