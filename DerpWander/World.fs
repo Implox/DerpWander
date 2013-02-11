@@ -8,64 +8,7 @@ open Microsoft.FSharp.Reflection
 open Util
 open DerpBrain
 open WorldOptions
-
-/// Represents each of the possible orientations of a Derp.
-type Orientation =
-    | North
-    | South
-    | East
-    | West
-with
-    /// Returns an orientation based on an action taken by a Derp.
-    static member ResolveAction (action : Action) (orientation : Orientation) =
-        match action with
-        | TurnLeft ->
-            match orientation with
-            | North -> West
-            | South -> East
-            | East  -> North
-            | West  -> South
-        | TurnRight ->
-            match orientation with
-            | North -> East
-            | South -> West
-            | East  -> South
-            | West  -> North
-
-    /// Returns the opposite of a given orientation.
-    static member Invert (orientation : Orientation) =
-        match orientation with
-        | North -> South
-        | South -> North
-        | East  -> West
-        | West  -> East
-    
-    static member Cases = FSharpType.GetUnionCases typedefof<Orientation> |> Array.map (fun case -> FSharpValue.MakeUnion (case, [||]))
-    static member Count = Array.length Orientation.Cases
-    static member RandomCase () = Orientation.Cases.[rand.Next Orientation.Count] :?> Orientation
-
-/// Represents a Derp, a creature that walks around and tries to consume food.
-type Derp (brain : DerpBrain, orientation : Orientation) =
-    let mutable orientation = orientation
-    let mutable state = 0
-    let mutable plantsEaten = 0
-
-    new (brain : DerpBrain) = new Derp (brain, Orientation.RandomCase ())
-
-    member this.Brain = brain
-    member this.Orientation = orientation
-    member this.State = state
-    member this.PlantsEaten = plantsEaten
-
-    member this.AddPlant () = plantsEaten <- plantsEaten + 1
-
-    member this.Update (sight : Sight) =
-        let action, nextState = this.Brain.Sample state sight
-        state <- nextState
-        if action = MoveBackward || action = MoveForward then Some action
-        else 
-            orientation <- Orientation.ResolveAction action orientation
-            None
+open Derp
 
 /// Represents a cell in the world.
 type Cell =
@@ -83,8 +26,8 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list) =
             let x, y = p
             temp.[x, y] <- Cell.Food
         for brainPosPair in (optionSet.DerpRespawnOp derpBrains optionSet.WorldSize) do
-            let x, y = brainPosPair.Pos
-            temp.[x, y] <- (Cell.Derp (new Derp (brainPosPair.Brain)))
+            let x, y = brainPosPair.pos
+            temp.[x, y] <- (Cell.Derp (new Derp (brainPosPair.brain)))
         temp
 
     /// Gets all the derps in the world, along with their locations.
@@ -135,7 +78,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list) =
                 | MoveBackward ->
                     let backCoord = coordSeen (Orientation.Invert derp.Orientation) pos
                     let invertSight = matchSight backCoord
-                    if invertSight = Sight.Wall || sight = Sight.Derp then ()
+                    if invertSight = Sight.Wall || invertSight = Sight.Derp then ()
                     else
                         let x, y = pos
                         let newX, newY = backCoord
@@ -145,7 +88,14 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list) =
             | None -> ()
 
              
+    /// The OptionSet for this world.
     member this.Options = optionSet
+
+    /// The square size of this world.
     member this.Size = size
+
+    /// The number of Derps in this world.
     member this.DerpCount = derpCount
+
+    /// The Cell grid of this world.
     member this.Map = map

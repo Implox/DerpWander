@@ -26,6 +26,10 @@ module Array =
         let window = Seq.windowed n col
         [| for i = 0 to (Seq.length window) - 1 do if i % n = 0 then yield Seq.nth i window |]
 
+    /// Returns a normalized version of a given array
+    let normalize (col : double []) =
+        let sum = Array.sum col
+        col |> Array.map (fun x -> x / sum)
 
 let rand = new Random ()
 

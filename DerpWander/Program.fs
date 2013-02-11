@@ -10,14 +10,14 @@ open Window
 
 [<STAThread; EntryPoint>]
 let main args =
-    let world = new World (new OptionSet (64,
-                                          50,
+    let world = new World (new OptionSet (128,
+                                          100,
                                           4,
                                           GrowthPatternOption.Clumps, 
                                           PlantRespawnOption.Never, 
                                           DerpRespawnOption.Random, 
-                                          GenSpeedOption.Fastest))
-    let updateTime = world.Options.Speed
+                                          GenSpeed.Fastest))
+    let updateTime = int world.Options.Speed
 
     Application.EnableVisualStyles ()
     let window = new GraphicsWindow (world)
@@ -26,10 +26,9 @@ let main args =
     let rec loop (last : DateTime) =
         if window.Visible then
             let current = DateTime.Now
-            let dTime = (floor >> int) (current - last).TotalMilliseconds
+            let dTime = int (current - last).TotalMilliseconds
             if dTime >= updateTime then
                 Application.DoEvents ()
-                printf "UPDATE%i\n" (rand.Next ())
                 window.Update ()
                 loop current
             else

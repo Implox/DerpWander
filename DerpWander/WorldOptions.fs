@@ -17,62 +17,60 @@ type GrowthPatternOption =
     | NearBottom
     | Rows
     | Random
-with
-    /// Returns the given growth pattern option's respective function.
-    static member Match (pattern : GrowthPatternOption) =
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module GrowthPatternOption =
+    let Resolve (pattern : GrowthPatternOption) =
         match pattern with
-        | Clumps -> PlantOptionAlg.clump
-        | NearBottom -> PlantOptionAlg.nearBottom
+        | Clumps -> PlantOptionAlg.PlantGrowth.clump
+        | NearBottom -> PlantOptionAlg.PlantGrowth.nearBottom
         | Rows -> failwith "Not Implemented"
-        | Random -> PlantOptionAlg.random
+        | Random -> PlantOptionAlg.PlantGrowth.random
 
 /// Flags for where an eaten plant respawns.
 type PlantRespawnOption =
     | Nearby
     | Anywhere
     | Never
-with
-    static member Match (respawnOption : PlantRespawnOption) =
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module PlantRespawnOption =
+    let Resolve (respawnOption : PlantRespawnOption) =
         match respawnOption with
         | Nearby -> failwith "Not Implemented"
-        | Anywhere -> PlantOptionAlg.anywhereRespawn
+        | Anywhere -> PlantOptionAlg.PlantRespawn.anywhereRespawn
 
 /// Flags for where Derps spawn every new generation.
 type DerpRespawnOption =
     | Random
     | Center
     | SameAsParent
-with
-    static member Match (respawnOption : DerpRespawnOption) =
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module DerpRespawnOption =
+    let Resolve (respawnOption : DerpRespawnOption) =
         match respawnOption with
         | Random        -> DerpOptionAlg.random
         | Center        -> failwith "Not Implemented"
         | SameAsParent  -> failwith "Not Implemented"
 
 /// Flags for how fast the world updates.
-type GenSpeedOption =
-    | Fastest
-    | Fast
-    | Normal
-    | Slow
-    | Slowest
-with
-    /// Resolves a GenSpeedOption to a value in miliseconds per frame.
-    static member Match (speedOption : GenSpeedOption) =
-        match speedOption with
-        | Fastest   -> 50
-        | Faster    -> 125
-        | Fast      -> 250
-        | Normal    -> 500
-        | Slow      -> 1000
-        | Slowest   -> 2000
+type GenSpeed =
+    | Fastest = 50
+    | Faster  = 125
+    | Fast    = 250
+    | Normal  = 500
+    | Slow    = 1000
+    | Slowest = 2000
 
 /// Represents a complete set of options for a World.
-type OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateCount, growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, derpRespawnOption : DerpRespawnOption, speedOption : GenSpeedOption) = 
+type [<Struct>] OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateCount, 
+                           growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, 
+                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed) = 
     member this.WorldSize = worldSize
     member this.DerpCount = derpCount
     member this.StateCount = stateCount
-    member this.PlantGrowthFunc = GrowthPatternOption.Match growthOption
-    member this.PlantRespawnFunc = PlantRespawnOption.Match plantRespawnOption
-    member this.DerpRespawnOp = DerpRespawnOption.Match derpRespawnOption
-    member this.Speed = GenSpeedOption.Match speedOption
+    member this.PlantGrowthFunc = GrowthPatternOption.Resolve growthOption
+    member this.PlantRespawnFunc = PlantRespawnOption.Resolve plantRespawnOption
+    member this.DerpRespawnOp = DerpRespawnOption.Resolve derpRespawnOption
+    member this.Speed = speed

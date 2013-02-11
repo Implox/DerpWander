@@ -22,7 +22,8 @@
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Debug\DerpWander.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>25</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -54,6 +55,7 @@
     <Compile Include="PlantOptionAlg.fs" />
     <Compile Include="DerpOptionAlg.fs" />
     <Compile Include="WorldOptions.fs" />
+    <Compile Include="Derp.fs" />
     <Compile Include="World.fs" />
     <Compile Include="Window.fs" />
     <Compile Include="Program.fs" />

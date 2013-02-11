@@ -6,6 +6,7 @@ open System.Windows.Forms
 open System.Threading
 
 open Util
+open Derp
 open World
 
 /// The form in which the world will be displayed graphically.
@@ -46,13 +47,14 @@ type GraphicsWindow (world : World) as this =
             for y = 0 to world.Size - 1 do
                 let point = Point (x * 8, y * 8)
                 match world.Map.[x, y] with
+                | Empty ->
+                    e.Graphics.DrawImageUnscaled (blankSprite, point)
+                | Food ->
+                    e.Graphics.DrawImageUnscaled (foodSprite, point)
                 | Derp derp ->
                     match derp.Orientation with
                     | Orientation.North -> e.Graphics.DrawImageUnscaled (derpNorthSprite, point)
                     | Orientation.South -> e.Graphics.DrawImageUnscaled (derpSouthSprite, point)
                     | Orientation.East  -> e.Graphics.DrawImageUnscaled (derpEastSprite,  point)
                     | Orientation.West  -> e.Graphics.DrawImageUnscaled (derpWestSprite,  point)
-                | Food ->
-                    e.Graphics.DrawImageUnscaled (foodSprite, point)
-                | Empty ->
-                    e.Graphics.DrawImageUnscaled (blankSprite, point)
+                

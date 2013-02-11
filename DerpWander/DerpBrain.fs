@@ -16,13 +16,16 @@ type Action =
     | MoveBackward
     | TurnLeft
     | TurnRight
-with
-    static member Cases = 
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Action =
+    let Cases = 
         FSharpType.GetUnionCases typedefof<Action>
         |> Array.map (fun case -> FSharpValue.MakeUnion (case, [||]))
-    static member Count = Action.Cases.Length
-    static member GetIndex (action : Action) = Array.IndexOf (Action.Cases, action)
-    static member MatchIndex (index : int) = Action.Cases.[index] :?> Action
+    let Count = Cases.Length
+    let GetIndex (action : Action) = Array.IndexOf (Cases, action)
+    let MatchIndex (index : int) = Cases.[index] :?> Action
+
 
 /// Represents each of the things a Derp can see in front of itself.
 type Sight =
@@ -30,31 +33,36 @@ type Sight =
     | Wall
     | Food
     | Empty
-with
-    static member Cases = 
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Sight =
+    let Cases = 
         FSharpType.GetUnionCases typedefof<Sight> 
         |> Array.map (fun case -> FSharpValue.MakeUnion (case, [||]))
-    static member Count = Sight.Cases.Length
-    static member GetIndex (sight : Sight) = Array.IndexOf (Sight.Cases, sight)
+    let Count = Cases.Length
+    let GetIndex (sight : Sight) = Array.IndexOf (Cases, sight)
+
 
 /// The brain of a Derp. Performs all calculations relevant to decision-making.
 type DerpBrain (stateCount : int, actionMatrix : double [,], stateMatrix : double [,]) =
     let actionAliases = 
-        [|for i = 0 to (Array2D.length1 (actionMatrix) - 1) do
+        [| for i = 0 to (Array2D.length1 (actionMatrix) - 1) do
             for j = 0 to (Array2D.length2 (actionMatrix) - 1) do
-                yield actionMatrix.[i, j]|]
+                yield actionMatrix.[i, j] |]
         |> Array.breakBy Action.Count
+        |> Array.map Array.normalize
         |> Array.map (fun col -> alias col)
 
     let stateAliases =
-        [|for i = 0 to (Array2D.length1 (stateMatrix) - 1) do
+        [| for i = 0 to (Array2D.length1 (stateMatrix) - 1) do
             for j = 0 to (Array2D.length2 (stateMatrix) - 1) do
-                yield stateMatrix.[i, j]|]
+                yield stateMatrix.[i, j] |]
         |> Array.breakBy stateCount
+        |> Array.map Array.normalize
         |> Array.map (fun col -> alias col)
-
+        
     let actionMatrix = Array2D.init Sight.Count stateCount (fun i j -> actionAliases.[i * Sight.Count + j])
-    let stateMatrix  = Array2D.init Sight.Count stateCount (fun i j ->  stateAliases.[i * Sight.Count + j])
+    let stateMatrix  = Array2D.init Sight.Count stateCount (fun i j -> stateAliases.[i * Sight.Count + j])
 
     let sampleActionMatrix (state : State) (sight : Sight) =
         let index = Sight.GetIndex sight

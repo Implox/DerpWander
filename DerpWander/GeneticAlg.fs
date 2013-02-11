@@ -1,4 +1,5 @@
-﻿module GeneticAlg
+﻿/// Relevant types and functions for genetic algorithm. Adapted from a previous project.
+module GeneticAlg
 
 open System
 
@@ -25,7 +26,10 @@ let mutate (population : Population<'a>) mutator threshold fitness target =
 
 /// Randomly selects one of two given members, preferring the first member because it is more fit.
 let updateVals fitness target (c1 : Chromosome<'a>) (c2 : Chromosome<'a>) =
-    let value = [| for i = 0 to c1.Value.Length - 1 do if (Random ()).NextDouble() > 0.3 then yield c1.Value.[i] else yield c2.Value.[i] |]
+    let value = 
+        [| for i = 0 to c1.Value.Length - 1 do 
+            if (Random ()).NextDouble() > 0.3 then yield c1.Value.[i] 
+            else yield c2.Value.[i] |]
     Chromosome (value, target, fitness)
 
 /// Splits a given population in half and mates all its members.
@@ -43,7 +47,7 @@ let evolveStep (population : Population<'a>) mutator threshold fitness target =
     let xs, ys = List.splitAt keepSize mutated
     xs @ (List.take promoteSize ys) @ (mate mutated fitness target)
     
-/// Generates a new member for the population
+/// Generates a new member for the population.
 let genMember mutator fitness target =
     let value = mutator target
     Chromosome (value, target, fitness)
@@ -65,4 +69,4 @@ let evolve size threshold initGen mutator fitness target =
                 printf "Best: %A (%i)\n" (population.Head.Value) (population.Head.Fitness)
                 printf "Worst: %A (%i)\n\n" ((population.[population.Length - 1]).Value) ((population.[population.Length - 1]).Fitness)
             loop (evolveStep population mutator threshold fitness target) population.Head.Value (generation + 1)
-    loop (initPopulation size initGen fitness target) [||] 0    
+    loop (initPopulation size initGen fitness target) [||] 0
