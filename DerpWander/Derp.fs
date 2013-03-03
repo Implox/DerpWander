@@ -3,6 +3,7 @@
 open Microsoft.FSharp.Reflection
 
 open Util
+open GeneticAlg
 open DerpBrain
 
 /// Represents each of the possible orientations of a Derp.
@@ -15,7 +16,7 @@ type Orientation =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Orientation =
     /// Returns an orientation based on an action taken by a Derp.
-    let ResolveAction (action : Action) (orientation : Orientation) =
+    let resolveAction (action : Action) (orientation : Orientation) =
         match action with
         | TurnLeft ->
             match orientation with
@@ -31,7 +32,7 @@ module Orientation =
             | West  -> North
 
     /// Returns the opposite of a given orientation.
-    let Invert (orientation : Orientation) =
+    let invert (orientation : Orientation) =
         match orientation with
         | North -> South
         | South -> North
@@ -39,14 +40,14 @@ module Orientation =
         | West  -> East
     
     /// All the possible orientations.
-    let Cases = 
+    let cases = 
         FSharpType.GetUnionCases typedefof<Orientation> 
         |> Array.map (fun case -> FSharpValue.MakeUnion (case, [||]))
 
-    let Count = Array.length Cases
+    let count = Array.length cases
 
     /// Returns a random orientation.
-    let RandomCase () = Cases.[rand.Next Count] :?> Orientation
+    let randomCase () = cases.[rand.Next count] :?> Orientation
 
 /// Represents a Derp, a creature that walks around and tries to consume food.
 type Derp (brain : DerpBrain, orientation : Orientation) =
@@ -54,19 +55,32 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
     let mutable state = 0
     let mutable plantsEaten = 0
 
-    new (brain : DerpBrain) = new Derp (brain, Orientation.RandomCase ())
+    new (brain : DerpBrain) = new Derp (brain, Orientation.randomCase ())
 
     member this.Brain = brain
     member this.Orientation = orientation
     member this.State = state
     member this.PlantsEaten = plantsEaten
 
+    member this.Actionsome = this.Brain.ActionMatrix |> Array2D.flatten
+    member this.Statesome = this.Brain.StateMatrix |> Array2D.flatten
+
     member this.AddPlant () = plantsEaten <- plantsEaten + 1
 
     member this.Update (sight : Sight) =
         let action, nextState = this.Brain.Sample state sight
         state <- nextState
-        if action = MoveBackward || action = MoveForward then Some action
-        else 
-            orientation <- Orientation.ResolveAction action orientation
+        match action with
+        | MoveBackward | MoveForward -> Some action
+        | _ ->
+            orientation <- Orientation.resolveAction action orientation
             None
+    
+    static member Mutator (dna : DNA) =
+        if rand.NextDouble () < 0.60 then
+            let i = rand.Next dna.Actionsome.Length
+            dna.Actionsome.[i] <- dna.Actionsome.[i] + rand.NextDouble ()
+        else
+            let i = rand.Next dna.Statesome.Length
+            dna.Statesome.[i] <- dna.Statesome.[i] + rand.NextDouble ()
+        { Actionsome = Array.normalize dna.Actionsome; Statesome = Array.normalize dna.Statesome; Fitness = dna.Fitness}

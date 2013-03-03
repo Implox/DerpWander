@@ -11,6 +11,9 @@ type StateCount = int
 /// The number of Derps in a world.
 type DerpCount = int
 
+/// The threshold for a derp being mutated
+type Threshold = float
+
 /// Flags for plant growth patterns in the world.
 type GrowthPatternOption =
     | Clumps
@@ -20,7 +23,7 @@ type GrowthPatternOption =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module GrowthPatternOption =
-    let Resolve (pattern : GrowthPatternOption) =
+    let resolve (pattern : GrowthPatternOption) =
         match pattern with
         | Clumps -> PlantOptionAlg.PlantGrowth.clump
         | NearBottom -> PlantOptionAlg.PlantGrowth.nearBottom
@@ -35,7 +38,7 @@ type PlantRespawnOption =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module PlantRespawnOption =
-    let Resolve (respawnOption : PlantRespawnOption) =
+    let resolve (respawnOption : PlantRespawnOption) =
         match respawnOption with
         | Nearby -> failwith "Not Implemented"
         | Anywhere -> PlantOptionAlg.PlantRespawn.anywhereRespawn
@@ -48,15 +51,16 @@ type DerpRespawnOption =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DerpRespawnOption =
-    let Resolve (respawnOption : DerpRespawnOption) =
+    let resolve (respawnOption : DerpRespawnOption) =
         match respawnOption with
         | Random        -> DerpOptionAlg.random
         | Center        -> failwith "Not Implemented"
         | SameAsParent  -> failwith "Not Implemented"
 
-/// Flags for how fast the world updates.
+/// Flags for how fast the world updates (in milliseconds per frame).
 type GenSpeed =
-    | Fastest = 50
+    | FastestNoDisp = 0
+    | Fastest = 1
     | Faster  = 125
     | Fast    = 250
     | Normal  = 500
@@ -64,13 +68,33 @@ type GenSpeed =
     | Slowest = 2000
 
 /// Represents a complete set of options for a World.
-type [<Struct>] OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateCount, 
+type OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateCount, 
                            growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, 
-                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed) = 
+                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed, threshold : Threshold) =
+    let mutable speed = speed
+
+    /// The square side length of the world.
     member this.WorldSize = worldSize
+
+    /// The number of Derps in the world.
     member this.DerpCount = derpCount
+
+    /// The number of states for each Derp's brain.
     member this.StateCount = stateCount
-    member this.PlantGrowthFunc = GrowthPatternOption.Resolve growthOption
-    member this.PlantRespawnFunc = PlantRespawnOption.Resolve plantRespawnOption
-    member this.DerpRespawnOp = DerpRespawnOption.Resolve derpRespawnOption
-    member this.Speed = speed
+
+    /// The function used to generate plant growth in the world.
+    member this.PlantGrowthFunc = GrowthPatternOption.resolve growthOption
+
+    /// The function used to respawn eaten plants.
+    member this.PlantRespawnFunc = PlantRespawnOption.resolve plantRespawnOption
+
+    /// The function used to respawn derps after a generation.
+    member this.DerpRespawnOp = DerpRespawnOption.resolve derpRespawnOption
+
+    /// The GenSpeed option for the world.
+    member this.Speed
+        with get () = speed
+        and set value = speed <- value
+
+    /// The percent probability threshold for the mutation of a Derp in the world.
+    member this.Threshold = threshold

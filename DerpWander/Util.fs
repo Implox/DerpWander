@@ -11,25 +11,45 @@ type Random () =
 /// Contains useful extension functions for the F# List module.
 module List =
     /// Returns the first n elements in a list.
-    let take n (coll : _ list) = [for i = 0 to n - 1 do yield coll.[i]]
+    let inline take n (coll : _ list) = [for i = 0 to n - 1 do yield coll.[i]]
 
     /// Drops the first n elements in a list and returns what remains.
-    let drop n (coll : _ list) = [for i = n to coll.Length - 1 do yield coll.[i]]
+    let inline drop n (coll : _ list) = [for i = n to coll.Length - 1 do yield coll.[i]]
 
     /// Takes a given collection and returns two collections that are partitioned at the given index.
     let splitAt n (coll : _ list) = (take n coll, drop n coll)
 
 /// Contains useful extension functions for the F# Array module.
 module Array =
-    /// Breaks a list down into uniformly-sized chunks and returns each of them.
+    /// Returns the first n elements in a given array.
+    let inline take n (coll : _ []) = [| for i = 0 to n - 1 do yield coll.[i] |]
+
+    /// Drops the first n elements in a given array and returns what remains.
+    let inline drop n (coll : _ []) = [| for i = n to coll.Length - 1 do yield coll.[i] |]
+
+    /// Takes a given array and returns two arrays that are partitioned at the given index.
+    let splitAt n (coll : _ []) = (take n coll, drop n coll)
+
+    /// Breaks an array down into uniformly-sized chunks and returns an array containing each of them.
     let breakBy n (col : _ []) =
         let window = Seq.windowed n col
         [| for i = 0 to (Seq.length window) - 1 do if i % n = 0 then yield Seq.nth i window |]
 
-    /// Returns a normalized version of a given array
+    /// Returns a normalized version of a given array.
     let normalize (col : double []) =
         let sum = Array.sum col
         col |> Array.map (fun x -> x / sum)
+
+    /// Converts a one-dimensional array into a two-dimensional array with the given lengths.
+    let elevate (col : double []) (length1 : int) (length2 : int) = Array2D.init length1 length2 (fun i j -> col.[i + j * length1])
+
+/// Contains useful extension functions for the F# Array2D module.
+module Array2D =
+    /// Converts a two-dimensional array into a one-dimensional array.
+    let flatten (col : _ [,]) =
+        [| for i = 0 to (Array2D.length1 (col) - 1) do
+            for j = 0 to (Array2D.length2 (col) - 1) do
+                yield col.[i, j] |]
 
 let rand = new Random ()
 
