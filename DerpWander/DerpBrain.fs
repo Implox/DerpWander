@@ -14,7 +14,7 @@ type State = int
 /// Represents each of the potential actions a Derp can perform.
 type Action =
     | MoveForward
-    | MoveBackward
+    | TurnBack
     | TurnLeft
     | TurnRight
 

@@ -12,6 +12,7 @@ with
         let j = int e
         if p <= this.prob.[j] then j else this.alias.[j]
 
+/// Takes a float array representation of a probability distribution and creates an Alias from it.
 let alias pa =
     let rec split (pa : double []) n j (small, large as part) =
         if j = n then part

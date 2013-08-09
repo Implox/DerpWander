@@ -60,6 +60,6 @@ module PlantGrowth =
 
 
 module PlantRespawn =
-    let neverRespawn  = None 
+    let neverRespawn = None 
 
     let anywhereRespawn worldSize = Some (rand.Next worldSize, rand.Next worldSize)

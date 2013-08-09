@@ -69,3 +69,15 @@ let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =
     g.DrawImageUnscaledAndClipped (srcMap, Rectangle(-region.X, -region.Y, srcMap.Width, srcMap.Height))
     g.Dispose ()
     newMap
+
+/// Rotates a given bitmap by a given angle (in degrees).
+let rotateBitmap (srcMap : Bitmap) (theta : float) =
+    let newMap = new Bitmap (srcMap.Width, srcMap.Height)
+    let g = Graphics.FromImage newMap
+    newMap.SetResolution(srcMap.HorizontalResolution, srcMap.VerticalResolution)
+    g.TranslateTransform (float32 (srcMap.Width / 2), float32 (srcMap.Height / 2))
+    g.RotateTransform (float32 theta)
+    g.TranslateTransform (- float32 (srcMap.Width / 2), - float32 (srcMap.Height / 2))
+    g.DrawImage (srcMap, new Point (0, 0))
+    g.Dispose ()
+    newMap

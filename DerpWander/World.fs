@@ -63,10 +63,10 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
         |> Seq.toList
 
     member this.Update () =
-        let inline moveDerp (x, y) (nX, nY) (derp : Derp) =
+        let moveDerp (x, y) (nX, nY) (derp : Derp) =
             map.[x, y] <- Cell.Empty
             match map.[nX, nY] with
-            | Cell.Food -> derp.AddPlant ()
+            | Cell.Food -> derp.Tracker.IncPlants ()
             | _ -> ()
             map.[nX, nY] <- Cell.Derp derp
             ()
@@ -81,19 +81,18 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
 
         for i = 0 to derps.Length - 1 do
             let pos, derp = derps.[i]
-            let mutable pos = pos
             let foreCoord = coordSeen derp.Orientation pos
-            let backCoord = coordSeen (Orientation.invert derp.Orientation) pos
             let sight = matchSight foreCoord
-            let actionOp = derp.Update sight
-            let nPos =
-                match actionOp with
-                | Some MoveForward -> foreCoord
-                | Some MoveBackward -> backCoord
-                | _ -> pos
-            if pos <> nPos && canMove nPos then 
-                moveDerp pos nPos derp
-                derps.[i] <- (nPos, derp)
+            let action = derp.Update sight
+
+            if action = MoveForward then
+                let nPos = foreCoord
+                if canMove nPos then
+                    moveDerp pos nPos derp
+                    derp.Tracker.AddCell nPos
+                    derps.[i] <- (nPos, derp)
+            else
+                moveDerp pos pos derp
                          
     /// The OptionSet for this world.
     member this.Options = optionSet

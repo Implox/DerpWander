@@ -3,6 +3,8 @@
 open PlantOptionAlg
 open DerpOptionAlg
 
+open System
+
 type WorldSize = int
 
 /// The number of states in each Derp's brain.
@@ -12,7 +14,7 @@ type StateCount = int
 type DerpCount = int
 
 /// The threshold for a derp being mutated
-type Threshold = float
+type MutationThreshold = float
 
 /// Flags for plant growth patterns in the world.
 type GrowthPatternOption =
@@ -60,17 +62,18 @@ module DerpRespawnOption =
 /// Flags for how fast the world updates (in milliseconds per frame).
 type GenSpeed =
     | FastestNoDisp = 0
-    | Fastest = 1
-    | Faster  = 125
-    | Fast    = 250
-    | Normal  = 500
-    | Slow    = 1000
-    | Slowest = 2000
+    | Fastest       = 1
+    | Faster        = 125
+    | Fast          = 250
+    | Normal        = 500
+    | Slow          = 1000
+    | Slowest       = 2000
 
 /// Represents a complete set of options for a World.
 type OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateCount, 
                            growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, 
-                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed, threshold : Threshold) =
+                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed, threshold : MutationThreshold) =
+
     let mutable speed = speed
 
     /// The square side length of the world.

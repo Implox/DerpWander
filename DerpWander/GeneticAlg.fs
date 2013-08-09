@@ -6,23 +6,23 @@ open System
 open Util
 
 /// Represents the genetic information of a member of a population
-type DNA = { Actionsome : double []; Statesome : double []; mutable Fitness : int; }
+type DNA = { Actionsome : double []; Statesome : double []; mutable Fitness : float; }
 
 type Population = DNA list
 
-/// Sorts DNAs by their fitness values (best fitness is 0).
+/// Sorts DNAs by their fitness values (worst fitness is 0).
 let rank (population : Population) = population |> List.sortBy (fun dna -> -dna.Fitness)
 
 /// Mutates the DNAs in a population using given mutator function.    
 let mutate (population : Population) mutator threshold =
     List.take 5 population @ [for dna in List.drop 5 population do
-                            if (Random ()).NextDouble() < threshold then
-                                yield mutator dna
-                            else yield dna]
+                                if (Random ()).NextDouble() < threshold then
+                                    yield mutator dna
+                                else yield dna]
 
 /// Randomly selects each gene from either the first or second DNA, preferring the genes of the first because it is more fit.
 let updateVals (d1 : DNA) (d2 : DNA) =
-    let threshold = 0.70
+    let threshold = 0.60
     let actionsome = 
         [| for i = 0 to d1.Actionsome.Length - 1 do 
             if (Random ()).NextDouble() < threshold then yield d1.Actionsome.[i] 
@@ -31,7 +31,7 @@ let updateVals (d1 : DNA) (d2 : DNA) =
         [| for i = 0 to d1.Statesome.Length - 1 do 
             if (Random ()).NextDouble() < threshold then yield d1.Statesome.[i] 
             else yield d2.Statesome.[i] |]
-    { Actionsome = actionsome; Statesome = statesome; Fitness = 0; }
+    { Actionsome = actionsome; Statesome = statesome; Fitness = 0.0; }
 
 /// Splits a given population in half and mates all its members.
 let mate (population : Population) =
