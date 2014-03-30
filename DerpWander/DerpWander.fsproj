@@ -52,10 +52,10 @@
     <Compile Include="VoseAlg.fs" />
     <Compile Include="GeneticAlg.fs" />
     <Compile Include="DerpBrain.fs" />
+    <Compile Include="Derp.fs" />
     <Compile Include="PlantOptionAlg.fs" />
     <Compile Include="DerpOptionAlg.fs" />
     <Compile Include="WorldOptions.fs" />
-    <Compile Include="Derp.fs" />
     <Compile Include="World.fs" />
     <Compile Include="Window.fs" />
     <Compile Include="Program.fs" />

@@ -13,10 +13,10 @@ open Window
 [<STAThread; EntryPoint>]
 let main args =
     Console.BufferHeight <- int Int16.MaxValue-1
-    let options = new OptionSet (64, 
-                                 20, 
-                                 4,
-                                 GrowthPatternOption.Clumps, 
+    let options = new OptionSet ((64+32, 64+32), 
+                                 50, 
+                                 8,
+                                 GrowthPatternOption.Clumped, 
                                  PlantRespawnOption.Never, 
                                  DerpRespawnOption.Random, 
                                  GenSpeed.Normal,
@@ -29,7 +29,11 @@ let main args =
 
     Application.EnableVisualStyles ()
     let window = new GraphicsWindow (world)
-    printfn "Number of derps: %i\nStates per Derp brain: %i\nSkipSize: %i generations\nRight click on the window to modify options...\n" options.DerpCount options.StateCount timeChunk
+    printfn "Number of derps: %i\nStates per Derp brain: %i\nSkipSize: %i generations\nRight click on the window to modify options...\n" 
+            options.DerpCount 
+            options.StateCount 
+            timeChunk
+
     window.Show ()
 
     /// Updates a population for the next generation.
@@ -67,6 +71,5 @@ let main args =
                 Application.DoEvents ()
                 simGeneration last day genLength world
         else ()
-
-    simGeneration DateTime.Now 1 365 window.World
+    simGeneration DateTime.Now 1 300 window.World
     0

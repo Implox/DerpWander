@@ -2,6 +2,8 @@
 
 open System.Drawing
 
+type Point2 = int * int
+
 type Random () =
     inherit System.Random ()
 
@@ -60,7 +62,10 @@ let inline modf (x : float) = (x - (int >> float) x, (int >> float) x)
 let inline isInBounds x y width height = (0 <= x && x < width) && (0 <= y && y < height)
 
 /// Adds two tuples together
-let inline tupleAdd ((ax, ay) : int * int) ((bx, by) : int * int) = (ax + bx, ay + by)
+let inline tupleAdd ((ax, ay) : Point2) ((bx, by) : Point2) = (ax + bx, ay + by)
+
+/// Modified mod function, used for wrapping world coordinates properly
+let (%%) x m = ((x % m) + m) % m
 
 /// Creates a new bitmap which contains a given region within a given bitmap.
 let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =

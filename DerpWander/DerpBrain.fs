@@ -31,7 +31,6 @@ module Action =
 /// Represents each of the things a Derp can see in front of itself.
 type Sight =
     | Derp
-    | Wall
     | Food
     | Empty
 

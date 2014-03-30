@@ -7,15 +7,18 @@ open Util
 open DerpBrain
 
 /// Represents the pairing of a DerpBrain and a physical location in the world.
-type BrainPosPair = { Brain : DerpBrain; Pos : (int * int); }
+type BrainPosPair = { Brain : DerpBrain; Pos : Point2; }
 
-let random (derpList : DerpBrain list) (size : int) =
+let random (derpList : DerpBrain list) worldSize =
     let rec loop derps accum =
         match derps with
         | hd :: tl ->
+            let width, height = worldSize
             let positions = accum |> List.map (fun x -> x.Pos)
-            let newCoord = (rand.Next size, rand.Next size)
+            let newCoord = (rand.Next width, rand.Next height)
             if List.exists (fun p -> p = newCoord) positions then loop derps accum
             else loop tl ({ Brain = hd; Pos = newCoord } :: accum)
         | _ -> accum
     loop derpList []
+
+

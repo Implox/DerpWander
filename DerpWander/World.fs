@@ -21,17 +21,22 @@ type Cell =
 
 type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Generation) =
     let size = optionSet.WorldSize
+    let width, height = size
     let derpCount = optionSet.DerpCount
     let derps = 
         optionSet.DerpRespawnOp derpBrains optionSet.WorldSize 
             |> Seq.map (fun brainPosPair -> (brainPosPair.Pos, Derp.Derp brainPosPair.Brain))
             |> Seq.toArray
 
-    let map =            
-        let temp = Array2D.create size size Cell.Empty
-        let func = optionSet.PlantGrowthFunc
-        func size (fun (x : int, y : int) -> temp.[x, y] <- Cell.Food)
-        for ((x, y), derp) in derps do temp.[x, y] <- Cell.Derp derp
+    let map =
+        let temp = Array2D.create width height Cell.Empty
+        let grow = optionSet.PlantGrowthFunc
+        let place cell (x, y) = temp.[x,y] <- cell
+        let placeFood = place Cell.Food
+        let placeDerp derp = place (Cell.Derp derp)
+
+        grow size placeFood
+        for ((x, y), derp) in derps do placeDerp derp (x, y)
         temp
 
     /// Gets the coordinate that is in front of a given Derp.
@@ -46,14 +51,15 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
     /// Resolves a world Cell to a Sight recognizable by a DerpBrain.
     let matchSight pos =
         let x, y = pos
-        if not (isInBounds x y size size) then Sight.Wall
-        else
-            match map.[x, y] with
-            | Derp _ -> Sight.Derp
-            | Food   -> Sight.Food
-            | Empty  -> Sight.Empty
+        match map.[x, y] with
+        | Derp _ -> Sight.Derp
+        | Food   -> Sight.Food
+        | Empty  -> Sight.Empty
 
-    new (optionSet) = new World (optionSet, [for i = 0 to optionSet.DerpCount - 1 do yield DerpBrain (optionSet.StateCount)], 0)
+    new (optionSet) = new World (optionSet, 
+                                 [for i = 0 to optionSet.DerpCount - 1 do 
+                                    yield DerpBrain (optionSet.StateCount)], 
+                                 0)
 
     member this.Derps =
         derps
@@ -66,39 +72,44 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
         let moveDerp (x, y) (nX, nY) (derp : Derp) =
             map.[x, y] <- Cell.Empty
             match map.[nX, nY] with
-            | Cell.Food -> derp.Tracker.IncPlants ()
+            | Cell.Food -> derp.Tracker.SuccPlants ()
             | _ -> ()
             map.[nX, nY] <- Cell.Derp derp
             ()
 
-        let canMove (nX, nY) =
-            if not (isInBounds nX nY size size) then false
-            else
-                match map.[nX, nY] with
-                | Cell.Empty -> true
-                | Cell.Food -> true
-                | Cell.Derp _ -> false
+        let canMoveTo (nX, nY) =
+            match map.[nX, nY] with
+            | Cell.Empty -> true
+            | Cell.Food -> true
+            | Cell.Derp _ -> false
 
         for i = 0 to derps.Length - 1 do
             let pos, derp = derps.[i]
-            let foreCoord = coordSeen derp.Orientation pos
+            let foreCoord = 
+                let x, y = coordSeen derp.Orientation pos
+                (x %% width, y %% height)
             let sight = matchSight foreCoord
             let action = derp.Update sight
 
             if action = MoveForward then
                 let nPos = foreCoord
-                if canMove nPos then
+                if canMoveTo nPos then
                     moveDerp pos nPos derp
                     derp.Tracker.AddCell nPos
                     derps.[i] <- (nPos, derp)
-            else
-                moveDerp pos pos derp
+            else moveDerp pos pos derp
                          
     /// The OptionSet for this world.
     member this.Options = optionSet
 
-    /// The square size of this world.
+    /// The horizontal and vertical dimensions of the world.
     member this.Size = size
+
+    /// The horizontal width of the world.
+    member this.Width = width
+
+    /// The vertical height of the world.
+    member this.Height = height
 
     /// The number of Derps in this world.
     member this.DerpCount = derpCount

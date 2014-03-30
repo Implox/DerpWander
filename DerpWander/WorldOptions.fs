@@ -5,7 +5,7 @@ open DerpOptionAlg
 
 open System
 
-type WorldSize = int
+type WorldSize = int * int
 
 /// The number of states in each Derp's brain.
 type StateCount = int
@@ -18,7 +18,7 @@ type MutationThreshold = float
 
 /// Flags for plant growth patterns in the world.
 type GrowthPatternOption =
-    | Clumps
+    | Clumped
     | NearBottom
     | Rows
     | Random
@@ -27,23 +27,25 @@ type GrowthPatternOption =
 module GrowthPatternOption =
     let resolve (pattern : GrowthPatternOption) =
         match pattern with
-        | Clumps -> PlantOptionAlg.PlantGrowth.clump
+        | Clumped -> PlantOptionAlg.PlantGrowth.clumped
         | NearBottom -> PlantOptionAlg.PlantGrowth.nearBottom
         | Rows -> failwith "Not Implemented"
         | Random -> PlantOptionAlg.PlantGrowth.random
 
 /// Flags for where an eaten plant respawns.
 type PlantRespawnOption =
-    | Nearby
-    | Anywhere
     | Never
+    | Anywhere
+    | Nearby
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module PlantRespawnOption =
     let resolve (respawnOption : PlantRespawnOption) =
         match respawnOption with
+        | Never -> PlantOptionAlg.PlantRespawn.never
+        | Anywhere -> PlantOptionAlg.PlantRespawn.anywhere
         | Nearby -> failwith "Not Implemented"
-        | Anywhere -> PlantOptionAlg.PlantRespawn.anywhereRespawn
+        
 
 /// Flags for where Derps spawn every new generation.
 type DerpRespawnOption =

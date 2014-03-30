@@ -56,7 +56,7 @@ module Orientation =
 type Tracker () =
     let mutable timesMoved = 0
     let mutable plantsEaten = 0
-    let visitedCells = HashSet<int * int> ()
+    let visitedCells = HashSet<Point2> ()
 
     /// The number of times a Derp has successfully moved to a new location in
     /// the world. This value is used to differentiate between the number of 
@@ -70,10 +70,10 @@ type Tracker () =
     /// Set of all the unique locations a Derp has visited during a generation.
     member this.VisitedCells with get () = visitedCells
 
-    member this.IncMoves () =
+    member this.SuccMoves () =
         timesMoved <- timesMoved + 1
 
-    member this.IncPlants () = 
+    member this.SuccPlants () = 
         plantsEaten <- plantsEaten + 1
 
     member this.AddCell pos = visitedCells.Add pos |> ignore
@@ -108,7 +108,7 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
         let action, nextState = this.Brain.Sample state sight
         state <- nextState
         orientation <- Orientation.resolveAction action orientation
-        if action = MoveForward then tracker.IncMoves ()
+        if action = MoveForward then tracker.SuccMoves ()
         action
 
     static member Mutator (dna : DNA) =

@@ -22,7 +22,7 @@ let mutate (population : Population) mutator threshold =
 
 /// Randomly selects each gene from either the first or second DNA, preferring the genes of the first because it is more fit.
 let updateVals (d1 : DNA) (d2 : DNA) =
-    let threshold = 0.60
+    let threshold = 0.90
     let actionsome = 
         [| for i = 0 to d1.Actionsome.Length - 1 do 
             if (Random ()).NextDouble() < threshold then yield d1.Actionsome.[i] 

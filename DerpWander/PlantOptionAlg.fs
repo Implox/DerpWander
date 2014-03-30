@@ -7,22 +7,23 @@ open System.Collections.Generic
 open Util
 
 module PlantGrowth = 
-
     /// Generates a "clumped" growth pattern.
-    let clump worldSize write =
+    let clumped worldSize write =
+        let width, height = worldSize
         let seeds =
-            let threshold = 0.95
+            let threshold = 0.40
             let div = 6
-            [for i in [0 .. (worldSize / div) - 1] do
-                for j in [0 .. (worldSize / div) - 1] do
-                    let x = i * (worldSize / div)
-                    let y = j * (worldSize / div)
+            [for i in [0 .. (width / div) - 1] do
+                for j in [0 .. (height / div) - 1] do
+                    let x = i * (width / div)
+                    let y = j * (height / div)
                     if rand.NextDouble () < threshold then
-                        yield (x + rand.Next (-(worldSize / (div * 2)), worldSize / (div * 2)),
-                               y + rand.Next (-(worldSize / (div * 2)), worldSize / (div * 2)))]
+                        yield (x + rand.Next (-(width / (div * 2)), width / (div * 2)),
+                               y + rand.Next (-(height / (div * 2)), height / (div * 2)))]
 
         let solidRadius = 0.5
         let falloffRadius = 5.0
+
         let phi samplePoint basePoint =
             let x, y = samplePoint
             let bx, by = basePoint
@@ -30,36 +31,53 @@ module PlantGrowth =
             let dy = float (by - y)
             let d = sqrt (dx * dx + dy * dy)
             if d <= solidRadius then true
-            elif d <= falloffRadius then rand.NextDouble () > (d - solidRadius) / (falloffRadius - solidRadius)
+            elif d <= falloffRadius then 
+                rand.NextDouble () > (d - solidRadius) / (falloffRadius - solidRadius)
             else false
         
         let iRadius = int falloffRadius
         for seed in seeds do
             let bx, by = seed
-            for x = max 0 (bx - iRadius) to min (worldSize - 1) (bx + iRadius) do
-                for y = max 0 (by - iRadius) to min (worldSize - 1) (by + iRadius) do
-                    if phi (x, y) seed then write (x, y)
+            for x = (bx - iRadius) to (bx + iRadius) do
+                for y = (by - iRadius) to (by + iRadius) do
+                    if phi (x, y) seed then write (x % width, y % height)
 
     /// Generates a random growth pattern.
     let random worldSize write =
-        let plantCount = int (float (worldSize * worldSize) * 0.25)
-        for i = 0 to (plantCount - 1) do write (rand.Next worldSize, rand.Next worldSize)
+        let width, height = worldSize
+        let plantCount = int (float (width * height) * 0.40)
+        for i = 0 to (plantCount - 1) do write (rand.Next width, rand.Next height)
 
     /// Generates a growth pattern where the plants group toward the bottom.
     let nearBottom worldSize write =
+        let width, height = worldSize
         let factor = 1.0
     
-        let phi (samplePoint : int * int) =
-            let x, _ = samplePoint
-            let dx = abs (float ((worldSize - (worldSize / 8)) - x))
-            rand.NextDouble () < (factor * (1.0 / dx))
+        let phi (samplePoint : Point2) =
+            let _, y = samplePoint
+            let dy = abs (float ((height - (height / 8)) - y))
+            rand.NextDouble () < (factor * (1.0 / dy))
 
-        for i = 0 to worldSize - 1 do
-            for j = 0 to worldSize - 1 do
-                if phi (i, j) then write (i, j)
+        for x = 0 to width - 1 do
+            for y = 0 to height - 1 do
+                if phi (x, y) then write (x, y)
 
 
 module PlantRespawn =
-    let neverRespawn = None 
+    let never _ _ _ _ = ()
 
-    let anywhereRespawn worldSize = Some (rand.Next worldSize, rand.Next worldSize)
+    let anywhere isEligible write worldSize _ =
+        let rec makePoint () =
+            let candidate = (rand.Next worldSize, rand.Next worldSize)
+            if candidate |> isEligible then candidate
+            else makePoint ()
+        write <| makePoint ()
+
+    let nearby isEligible write worldSize plantPos =
+        let rec makePoint () =
+            let div = 6
+            let width, height = worldSize
+            let avg = (width + height) / 2
+            let radius = avg / div
+            ()
+        ()

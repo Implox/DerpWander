@@ -31,7 +31,7 @@ type GraphicsWindow (world : World) as this =
 
     do
         this.Text <- "DerpWander"
-        this.ClientSize <- Size (world.Size * 8, world.Size * 8)
+        this.ClientSize <- Size (world.Width * 8, world.Height * 8)
         this.StartPosition <- FormStartPosition.CenterScreen
         this.Icon <- Icon.FromHandle (atlas.GetHicon ())
         this.SetStyle (ControlStyles.AllPaintingInWmPaint, true)
@@ -69,8 +69,12 @@ type GraphicsWindow (world : World) as this =
         | _ -> ()
 
     override this.OnPaint (e : PaintEventArgs) =
-        for x = 0 to world.Size - 1 do
-            for y = 0 to world.Size - 1 do
+        e.Graphics.CompositingQuality <- Drawing2D.CompositingQuality.HighSpeed
+        e.Graphics.CompositingMode <- Drawing2D.CompositingMode.SourceOver
+        e.Graphics.InterpolationMode <- Drawing2D.InterpolationMode.NearestNeighbor
+        
+        for x = 0 to world.Width - 1 do
+            for y = 0 to world.Height - 1 do
                 let point = Point (x * 8, y * 8)
                 match world.Map.[x, y] with
                 | Empty ->
