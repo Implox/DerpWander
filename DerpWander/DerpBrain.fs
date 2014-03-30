@@ -59,24 +59,31 @@ type DerpBrain (stateCount : int, actionMatrix : double [,], stateMatrix : doubl
         |> Array.map Array.normalize
         |> Array.map (fun col -> alias col)
 
+    /// Represents a matrix of functions which choose the next action of the
+    /// derp given its current state and what it's seeing
     let actionAliasMatrix = 
         match stateCount with
         | 1 -> Array2D.init Sight.count stateCount (fun i j -> actionAliases.[i])
         | _ -> Array2D.init Sight.count stateCount (fun i j -> actionAliases.[i + Sight.count * j])
 
+    /// Represents a matrix of functions which choose the next state of the
+    /// derp given its current state and what it's seeing
     let stateAliasMatrix  = 
         match stateCount with
         | 1 -> Array2D.init Sight.count stateCount (fun i j -> stateAliases.[i])
         | _ -> Array2D.init Sight.count stateCount (fun i j -> stateAliases.[i + Sight.count * j])
 
+    /// Samples the proper action matrix to get the next action performed by the derp
     let sampleActionMatrix (state : State) (sight : Sight) =
         let index = Sight.getIndex sight
-        actionAliasMatrix.[index, state].Choose ()
-        |> Action.matchIndex
+        let chooseAction = actionAliasMatrix.[index, state]
+        chooseAction () |> Action.matchIndex
 
+    /// Samples the proper state matrix to get the next state for the derp
     let sampleStateMatrix (state : State) (sight : Sight) =
         let index = Sight.getIndex sight
-        stateAliasMatrix.[index, state].Choose ()
+        let chooseState = stateAliasMatrix.[index, state] 
+        chooseState ()
 
     new (stateCount : int) = DerpBrain (stateCount, 
                                         Array2D.init (stateCount * Sight.count) Action.count (fun _ _ -> rand.NextDouble ()), 

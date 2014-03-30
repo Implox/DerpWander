@@ -70,9 +70,11 @@ type Tracker () =
     /// Set of all the unique locations a Derp has visited during a generation.
     member this.VisitedCells with get () = visitedCells
 
+    /// Increments the move counter by one
     member this.SuccMoves () =
         timesMoved <- timesMoved + 1
 
+    /// Increments the plant counter by one
     member this.SuccPlants () = 
         plantsEaten <- plantsEaten + 1
 

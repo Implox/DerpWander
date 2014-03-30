@@ -33,7 +33,7 @@ let alias pa =
         | [], k :: large ->
             r.prob.[k] <- 1.0
             init r pa ([], large)
-        | [], [] -> r
+        | [], [] -> r.Choose
     
     let n = Array.length pa
     if n = 0 then failwith "Invalid arg: \"alias\""

@@ -31,7 +31,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
     let map =
         let temp = Array2D.create width height Cell.Empty
         let grow = optionSet.PlantGrowthFunc
-        let place cell (x, y) = temp.[x,y] <- cell
+        let place cell (x, y) = temp.[x %% width, y %% height] <- cell
         let placeFood = place Cell.Food
         let placeDerp derp = place (Cell.Derp derp)
 

@@ -13,24 +13,24 @@ type Random () =
 /// Contains useful extension functions for the F# List module.
 module List =
     /// Returns the first n elements in a list.
-    let inline take n (coll : _ list) = [for i = 0 to n - 1 do yield coll.[i]]
+    let inline take n (col : _ list) = [for i = 0 to n - 1 do yield col.[i]]
 
     /// Drops the first n elements in a list and returns what remains.
-    let inline drop n (coll : _ list) = [for i = n to coll.Length - 1 do yield coll.[i]]
+    let inline drop n (col : _ list) = [for i = n to col.Length - 1 do yield col.[i]]
 
-    /// Takes a given collection and returns two collections that are partitioned at the given index.
-    let splitAt n (coll : _ list) = (take n coll, drop n coll)
+    /// Takes a given colection and returns two colections that are partitioned at the given index.
+    let splitAt n (col : _ list) = (take n col, drop n col)
 
 /// Contains useful extension functions for the F# Array module.
 module Array =
     /// Returns the first n elements in a given array.
-    let inline take n (coll : _ []) = [| for i = 0 to n - 1 do yield coll.[i] |]
+    let inline take n (col : _ []) = [| for i = 0 to n - 1 do yield col.[i] |]
 
     /// Drops the first n elements in a given array and returns what remains.
-    let inline drop n (coll : _ []) = [| for i = n to coll.Length - 1 do yield coll.[i] |]
+    let inline drop n (col : _ []) = [| for i = n to col.Length - 1 do yield col.[i] |]
 
     /// Takes a given array and returns two arrays that are partitioned at the given index.
-    let splitAt n (coll : _ []) = (take n coll, drop n coll)
+    let splitAt n (col : _ []) = (take n col, drop n col)
 
     /// Breaks an array down into uniformly-sized chunks and returns an array containing each of them.
     let breakBy n (col : _ []) =
