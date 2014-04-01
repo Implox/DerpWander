@@ -13,9 +13,9 @@ open Window
 [<STAThread; EntryPoint>]
 let main args =
     Console.BufferHeight <- int Int16.MaxValue-1
-    let options = new OptionSet ((64+32, 64+32), 
+    let options = new OptionSet ((64, 64), 
                                  50, 
-                                 8,
+                                 20,
                                  GrowthPatternOption.Clumped, 
                                  PlantRespawnOption.Never, 
                                  DerpRespawnOption.Random, 
