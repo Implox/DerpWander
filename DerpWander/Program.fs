@@ -19,7 +19,7 @@ let main args =
                                  GrowthPatternOption.Clumped, 
                                  PlantRespawnOption.Never, 
                                  DerpRespawnOption.Random, 
-                                 GenSpeed.Normal,
+                                 GenSpeed.Fastest,
                                  0.01)
 
     let world = new World (options)
