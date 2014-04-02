@@ -72,18 +72,18 @@ type GraphicsWindow (world : World) as this =
         e.Graphics.CompositingQuality <- Drawing2D.CompositingQuality.HighSpeed
         e.Graphics.CompositingMode <- Drawing2D.CompositingMode.SourceOver
         e.Graphics.InterpolationMode <- Drawing2D.InterpolationMode.NearestNeighbor
-        
-        for x = 0 to world.Width - 1 do
-            for y = 0 to world.Height - 1 do
-                let point = Point (x * 8, y * 8)
-                match world.Map.[x, y] with
-                | Empty ->
-                    e.Graphics.DrawImageUnscaled (blankSprite, point)
-                | Food ->
-                    e.Graphics.DrawImageUnscaled (foodSprite, point)
-                | Derp derp ->
-                    match derp.Orientation with
-                    | Orientation.North -> e.Graphics.DrawImageUnscaled (derpNorthSprite, point)
-                    | Orientation.South -> e.Graphics.DrawImageUnscaled (derpSouthSprite, point)
-                    | Orientation.East  -> e.Graphics.DrawImageUnscaled (derpEastSprite,  point)
-                    | Orientation.West  -> e.Graphics.DrawImageUnscaled (derpWestSprite,  point)
+
+        for row = 0 to world.Height - 1 do
+            for col = 0 to world.Width - 1 do
+                    let point = Point (col * 8, row * 8)
+                    match world.Map.[col, row] with
+                    | Empty ->
+                        e.Graphics.DrawImageUnscaled (blankSprite, point)
+                    | Food ->
+                        e.Graphics.DrawImageUnscaled (foodSprite, point)
+                    | Derp derp ->
+                        match derp.Orientation with
+                        | Orientation.North -> e.Graphics.DrawImageUnscaled (derpNorthSprite, point)
+                        | Orientation.South -> e.Graphics.DrawImageUnscaled (derpSouthSprite, point)
+                        | Orientation.East  -> e.Graphics.DrawImageUnscaled (derpEastSprite,  point)
+                        | Orientation.West  -> e.Graphics.DrawImageUnscaled (derpWestSprite,  point)

@@ -14,15 +14,13 @@ open Derp
 type Generation = int
 
 /// Represents a cell in the world.
-type Cell =
-    | Derp of Derp
-    | Food
-    | Empty
+type Cell = Empty | Food | Derp of Derp
 
 type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Generation) =
     let size = optionSet.WorldSize
     let width, height = size
     let derpCount = optionSet.DerpCount
+    let wrap = wrap size
     let derps = 
         optionSet.DerpRespawnOp derpBrains optionSet.WorldSize 
             |> Seq.map (fun brainPosPair -> (brainPosPair.Pos, Derp.Derp brainPosPair.Brain))
@@ -31,20 +29,33 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
     let map =
         let temp = Array2D.create width height Cell.Empty
         let grow = optionSet.PlantGrowthFunc
-        let place cell (x, y) = temp.[x %% width, y %% height] <- cell
-        let placeFood = place Cell.Food
-        let placeDerp derp = place (Cell.Derp derp)
+        let write value p = 
+            let x, y = wrap p
+            temp.[x, y] <- value
+        let placeFood = write Cell.Food
+        let placeDerp derp = write (Cell.Derp derp)
 
         grow size placeFood
-        for ((x, y), derp) in derps do placeDerp derp (x, y)
+        for (p, derp) in derps do placeDerp derp p
         temp
+
+    let respawnPlant p =
+        let spawn = optionSet.PlantRespawnFunc
+        let write cell (x, y) = map.[x, y] <- cell
+        let writeFood = write Cell.Food
+        let isEligible p =
+            let x, y = wrap p
+            match map.[x, y] with
+            | Cell.Empty -> true
+            | _ -> false
+        spawn isEligible writeFood size p
 
     /// Gets the coordinate that is in front of a given Derp.
     /// This represents what the Derp can see.
     let coordSeen orientation pos =
         match orientation with
-        | North -> tupleAdd pos (0,  1)
-        | South -> tupleAdd pos (0, -1)
+        | North -> tupleAdd pos (0, -1)
+        | South -> tupleAdd pos (0,  1)
         | East  -> tupleAdd pos (1,  0)
         | West  -> tupleAdd pos (-1, 0)
         
@@ -72,16 +83,18 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
         let moveDerp (x, y) (nX, nY) (derp : Derp) =
             map.[x, y] <- Cell.Empty
             match map.[nX, nY] with
-            | Cell.Food -> derp.Tracker.SuccPlants ()
+            | Cell.Food -> 
+                derp.Tracker.SuccPlants ()
+                if rand.NextDouble () < optionSet.PlantRespawnThreshold
+                    then respawnPlant (nX, nY)
             | _ -> ()
             map.[nX, nY] <- Cell.Derp derp
             ()
 
         let canMoveTo (nX, nY) =
             match map.[nX, nY] with
-            | Cell.Empty -> true
-            | Cell.Food -> true
             | Cell.Derp _ -> false
+            | _ -> true
 
         for i = 0 to derps.Length - 1 do
             let pos, derp = derps.[i]

@@ -43,7 +43,8 @@ module Array =
         col |> Array.map (fun x -> x / sum)
 
     /// Converts a one-dimensional array into a two-dimensional array with the given lengths.
-    let elevate (col : double []) (length1 : int) (length2 : int) = Array2D.init length1 length2 (fun i j -> col.[i + j * length1])
+    let elevate (col : double []) (length1 : int) (length2 : int) = 
+        Array2D.init length1 length2 (fun i j -> col.[i + j * length1])
 
 /// Contains useful extension functions for the F# Array2D module.
 module Array2D =
@@ -66,6 +67,9 @@ let inline tupleAdd ((ax, ay) : Point2) ((bx, by) : Point2) = (ax + bx, ay + by)
 
 /// Modified mod function, used for wrapping world coordinates properly
 let (%%) x m = ((x % m) + m) % m
+
+/// Wraps a coordinate pair to the bounds of a world
+let wrap (w, h) (x, y) = (x %% w, y %% h)
 
 /// Creates a new bitmap which contains a given region within a given bitmap.
 let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =

@@ -62,22 +62,24 @@ module PlantGrowth =
             for y = 0 to height - 1 do
                 if phi (x, y) then write (x, y)
 
-
 module PlantRespawn =
-    let never _ _ _ _ = ()
-
-    let anywhere isEligible write worldSize _ =
-        let rec makePoint () =
-            let candidate = (rand.Next worldSize, rand.Next worldSize)
-            if candidate |> isEligible then candidate
-            else makePoint ()
-        write <| makePoint ()
-
     let nearby isEligible write worldSize plantPos =
         let rec makePoint () =
             let div = 6
             let width, height = worldSize
             let avg = (width + height) / 2
-            let radius = avg / div
-            ()
-        ()
+            let r = avg / div
+            let candidate = (rand.Next (-r + 1, r), rand.Next (-r + 1, r))
+            if candidate |> isEligible then candidate
+            else makePoint ()
+        write <| makePoint ()
+
+    let anywhere isEligible write worldSize _ =
+        let width, height = worldSize
+        let rec makePoint () =
+            let candidate = (rand.Next width, rand.Next height)
+            if candidate |> isEligible then candidate
+            else makePoint ()
+        write <| makePoint ()
+
+    let never _ _ _ _ = ()

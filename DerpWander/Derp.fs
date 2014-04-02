@@ -81,7 +81,11 @@ type Tracker () =
     member this.AddCell pos = visitedCells.Add pos |> ignore
 
     member this.GetFitness () = 
-        float plantsEaten + (float visitedCells.Count / float timesMoved)
+        let foodFitness = float plantsEaten
+        let moveFitness = (float visitedCells.Count) / (float timesMoved)
+        let foodFactor = 0.65
+        let moveFactor = 1.0 - foodFactor
+        (foodFactor * foodFitness) + (moveFactor * moveFitness)
 
 
 /// Represents a Derp, a creature that walks around and tries to consume food.

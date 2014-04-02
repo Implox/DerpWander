@@ -10,17 +10,18 @@ open WorldOptions
 open World
 open Window
 
-[<STAThread; EntryPoint>]
+[<EntryPoint>]
 let main args =
     Console.BufferHeight <- int Int16.MaxValue-1
     let options = new OptionSet ((128, 64), 
-                                 15,
-                                 2,
+                                 25,
+                                 3,
                                  GrowthPatternOption.Clumped, 
-                                 PlantRespawnOption.Never, 
+                                 PlantRespawnOption.Nearby, 
                                  DerpRespawnOption.Random, 
                                  GenSpeed.Fastest,
-                                 0.05)
+                                 0.05,
+                                 0.75)
 
     let world = new World (options)
     let timeChunk = 250
@@ -38,20 +39,21 @@ let main args =
 
     /// Updates a population for the next generation.
     let nextGeneration (genLength : int) = 
-        let derps = window.World.Derps
+        let world = window.World
+        let derps = world.Derps
         
-        if (window.World.Options.Speed = GenSpeed.FastestNoDisp && window.World.Generation % timeChunk = 0) || (window.World.Options.Speed <> GenSpeed.FastestNoDisp) then 
-            printfn "Generation %i" (window.World.Generation)
+        if (world.Options.Speed = GenSpeed.FastestNoDisp && world.Generation % timeChunk = 0) || (world.Options.Speed <> GenSpeed.FastestNoDisp) then 
+            printfn "Generation %i" (world.Generation)
             printfn "Best: %i" (derps |> List.maxBy (fun derp -> derp.Tracker.PlantsEaten)).Tracker.PlantsEaten
             printfn "Avg: %.2f"  (derps |> List.averageBy (fun derp -> float derp.Tracker.PlantsEaten))
-            printfn "%i-Generation Average: %.2f\n" timeChunk (if window.World.Generation >= timeChunk then (Array.average averages) else Double.NaN)
+            printfn "%i-Generation Average: %.2f\n" timeChunk (if world.Generation >= timeChunk then (Array.average averages) else Double.NaN)
 
-        averages.[window.World.Generation % timeChunk] <- derps |> List.averageBy (fun derp -> float derp.Tracker.PlantsEaten)
+        averages.[world.Generation % timeChunk] <- derps |> List.averageBy (fun derp -> float derp.Tracker.PlantsEaten)
 
         let population : Population =
             [for derp in derps do
                 yield { Actionsome = derp.Actionsome; Statesome = derp.Statesome; Fitness = derp.Tracker.GetFitness ()}]
-        let nextStep = evolveStep population Derp.Derp.Mutator options.Threshold
+        let nextStep = evolveStep population Derp.Derp.Mutator options.MutationThreshold
         nextStep |> List.map (fun dna -> DerpBrain (options.StateCount, dna))
 
     /// Simulates the world for a single generation.

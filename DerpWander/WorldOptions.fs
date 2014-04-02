@@ -6,11 +6,7 @@ open DerpOptionAlg
 open System
 
 /// Flags for plant growth patterns in the world.
-type GrowthPatternOption =
-    | Clumped
-    | NearBottom
-    | Rows
-    | Random
+type GrowthPatternOption = Clumped | NearBottom | Rows | Random
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module GrowthPatternOption =
@@ -22,25 +18,18 @@ module GrowthPatternOption =
         | Random -> PlantOptionAlg.PlantGrowth.random
 
 /// Flags for where an eaten plant respawns.
-type PlantRespawnOption =
-    | Never
-    | Anywhere
-    | Nearby
+type PlantRespawnOption = Nearby | Anywhere | Never
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module PlantRespawnOption =
     let resolve (respawnOption : PlantRespawnOption) =
         match respawnOption with
-        | Never -> PlantOptionAlg.PlantRespawn.never
+        | Nearby -> PlantOptionAlg.PlantRespawn.anywhere
         | Anywhere -> PlantOptionAlg.PlantRespawn.anywhere
-        | Nearby -> failwith "Not Implemented"
-        
+        | Never -> PlantOptionAlg.PlantRespawn.never
 
 /// Flags for where Derps spawn every new generation.
-type DerpRespawnOption =
-    | Random
-    | Center
-    | SameAsParent
+type DerpRespawnOption = Random | Center | SameAsParent
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DerpRespawnOption =
@@ -62,8 +51,9 @@ type GenSpeed =
 
 /// Represents a complete set of options for a World.
 type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int, 
-                           growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, 
-                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed, threshold : float) =
+                growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption,
+                derpRespawnOption : DerpRespawnOption, speed : GenSpeed,
+                mutationThreshold : float, plantRespawnThreshold : float) =
 
     let mutable speed = speed
 
@@ -73,7 +63,8 @@ type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int,
     /// The number of Derps in the world.
     member this.DerpCount = 
         let derpcount = derpPairCount * 2
-        if derpcount >= (this.WorldSize |> (fun (x, y) -> x*y)) then failwith "Too many derps for world size"
+        if derpcount >= (this.WorldSize |> (fun (x, y) -> x*y)) 
+            then failwith "Too many derps for world size"
         else derpcount
 
     /// The number of states for each Derp's brain.
@@ -94,4 +85,7 @@ type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int,
         and set value = speed <- value
 
     /// The percent probability threshold for the mutation of a Derp in the world.
-    member this.Threshold = threshold
+    member this.MutationThreshold = mutationThreshold
+
+    /// The percent probability threshold for a plant respawning after being eaten.
+    member this.PlantRespawnThreshold = plantRespawnThreshold
