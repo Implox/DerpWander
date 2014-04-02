@@ -5,17 +5,6 @@ open DerpOptionAlg
 
 open System
 
-type WorldSize = int * int
-
-/// The number of states in each Derp's brain.
-type StateCount = int
-
-/// The number of Derps in a world.
-type DerpCount = int
-
-/// The threshold for a derp being mutated
-type MutationThreshold = float
-
 /// Flags for plant growth patterns in the world.
 type GrowthPatternOption =
     | Clumped
@@ -72,9 +61,9 @@ type GenSpeed =
     | Slowest       = 2000
 
 /// Represents a complete set of options for a World.
-type OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateCount, 
+type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int, 
                            growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption, 
-                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed, threshold : MutationThreshold) =
+                           derpRespawnOption : DerpRespawnOption, speed : GenSpeed, threshold : float) =
 
     let mutable speed = speed
 
@@ -82,7 +71,10 @@ type OptionSet (worldSize: WorldSize, derpCount : DerpCount, stateCount : StateC
     member this.WorldSize = worldSize
 
     /// The number of Derps in the world.
-    member this.DerpCount = derpCount
+    member this.DerpCount = 
+        let derpcount = derpPairCount * 2
+        if derpcount >= (this.WorldSize |> (fun (x, y) -> x*y)) then failwith "Too many derps for world size"
+        else derpcount
 
     /// The number of states for each Derp's brain.
     member this.StateCount = stateCount

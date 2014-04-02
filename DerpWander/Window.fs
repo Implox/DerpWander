@@ -15,7 +15,7 @@ type GraphicsWindow (world : World) as this =
     inherit Form ()
 
     let atlas = 
-        new System.Drawing.Bitmap (System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream "Atlas.png")
+        new System.Drawing.Bitmap (System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream "atlas_new.png")
 
     let mutable world = world
 

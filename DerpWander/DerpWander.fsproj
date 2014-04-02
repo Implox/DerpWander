@@ -60,7 +60,8 @@
     <Compile Include="Window.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
-    <EmbeddedResource Include="Atlas.png" />
+    <EmbeddedResource Include="atlas_classic.png" />
+    <EmbeddedResource Include="atlas_new.png" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

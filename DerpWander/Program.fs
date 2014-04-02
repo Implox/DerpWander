@@ -13,14 +13,14 @@ open Window
 [<STAThread; EntryPoint>]
 let main args =
     Console.BufferHeight <- int Int16.MaxValue-1
-    let options = new OptionSet ((64, 64), 
-                                 50, 
-                                 20,
+    let options = new OptionSet ((128, 64), 
+                                 15,
+                                 2,
                                  GrowthPatternOption.Clumped, 
                                  PlantRespawnOption.Never, 
                                  DerpRespawnOption.Random, 
                                  GenSpeed.Fastest,
-                                 0.01)
+                                 0.05)
 
     let world = new World (options)
     let timeChunk = 250
@@ -44,7 +44,7 @@ let main args =
             printfn "Generation %i" (window.World.Generation)
             printfn "Best: %i" (derps |> List.maxBy (fun derp -> derp.Tracker.PlantsEaten)).Tracker.PlantsEaten
             printfn "Avg: %.2f"  (derps |> List.averageBy (fun derp -> float derp.Tracker.PlantsEaten))
-            printfn "%i-Generation Average: %.2f\n" timeChunk (Array.average averages)
+            printfn "%i-Generation Average: %.2f\n" timeChunk (if window.World.Generation >= timeChunk then (Array.average averages) else Double.NaN)
 
         averages.[window.World.Generation % timeChunk] <- derps |> List.averageBy (fun derp -> float derp.Tracker.PlantsEaten)
 
