@@ -11,12 +11,10 @@ open DerpBrain
 open WorldOptions
 open Derp
 
-type Generation = int
-
 /// Represents a cell in the world.
 type Cell = Empty | Food | Derp of Derp
 
-type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Generation) =
+type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int) =
     let size = optionSet.WorldSize
     let width, height = size
     let derpCount = optionSet.DerpCount
@@ -39,6 +37,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
         for (p, derp) in derps do placeDerp derp p
         temp
 
+    /// Respawns a plant using the chosen respawn function.
     let respawnPlant p =
         let spawn = optionSet.PlantRespawnFunc
         let write cell (x, y) = map.[x, y] <- cell
@@ -74,11 +73,10 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
 
     member this.Derps =
         derps
-        |> Seq.map (fun p ->
-            let _, derp = p
-            derp)
+        |> Seq.map snd
         |> Seq.toList
 
+    /// Updates the world a single generation.
     member this.Update () =
         let moveDerp (x, y) (nX, nY) (derp : Derp) =
             map.[x, y] <- Cell.Empty
@@ -98,9 +96,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
 
         for i = 0 to derps.Length - 1 do
             let pos, derp = derps.[i]
-            let foreCoord = 
-                let x, y = coordSeen derp.Orientation pos
-                (x %% width, y %% height)
+            let foreCoord = wrap <| coordSeen derp.Orientation pos
             let sight = matchSight foreCoord
             let action = derp.Update sight
 
@@ -111,7 +107,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : Gen
                     derp.Tracker.AddCell nPos
                     derps.[i] <- (nPos, derp)
             else moveDerp pos pos derp
-                         
+            
     /// The OptionSet for this world.
     member this.Options = optionSet
 

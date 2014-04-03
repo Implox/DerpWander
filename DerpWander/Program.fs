@@ -21,7 +21,7 @@ let main args =
                                  DerpRespawnOption.Random, 
                                  GenSpeed.Fastest,
                                  0.05,
-                                 0.75)
+                                 0.10)
 
     let world = new World (options)
     let timeChunk = 250
@@ -41,7 +41,7 @@ let main args =
     let nextGeneration (genLength : int) = 
         let world = window.World
         let derps = world.Derps
-        
+       
         if (world.Options.Speed = GenSpeed.FastestNoDisp && world.Generation % timeChunk = 0) || (world.Options.Speed <> GenSpeed.FastestNoDisp) then 
             printfn "Generation %i" (world.Generation)
             printfn "Best: %i" (derps |> List.maxBy (fun derp -> derp.Tracker.PlantsEaten)).Tracker.PlantsEaten
