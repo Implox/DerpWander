@@ -83,6 +83,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
             match map.[nX, nY] with
             | Cell.Food -> 
                 derp.Tracker.SuccPlants ()
+                derp.Eat ()
                 if rand.NextDouble () < optionSet.PlantRespawnThreshold
                     then respawnPlant (nX, nY)
             | _ -> ()
@@ -96,17 +97,19 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
 
         for i = 0 to derps.Length - 1 do
             let pos, derp = derps.[i]
-            let foreCoord = wrap <| coordSeen derp.Orientation pos
-            let sight = matchSight foreCoord
-            let action = derp.Update sight
-
-            if action = MoveForward then
-                let nPos = foreCoord
-                if canMoveTo nPos then
-                    moveDerp pos nPos derp
-                    derp.Tracker.AddCell nPos
-                    derps.[i] <- (nPos, derp)
-            else moveDerp pos pos derp
+            if derp.IsAlive () then
+                if derp.Energy <= 0.0 then derp.Die ()
+                else
+                    let foreCoord = wrap <| coordSeen derp.Orientation pos
+                    let sight = matchSight foreCoord
+                    let action = derp.Update sight
+                    if action = MoveForward then
+                        let nPos = foreCoord
+                        if canMoveTo nPos then
+                            moveDerp pos nPos derp
+                            derp.Tracker.AddCell nPos
+                            derps.[i] <- (nPos, derp)
+                    else moveDerp pos pos derp
             
     /// The OptionSet for this world.
     member this.Options = optionSet

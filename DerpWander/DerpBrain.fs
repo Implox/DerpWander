@@ -12,11 +12,7 @@ open GeneticAlg
 type State = int
 
 /// Represents each of the potential actions a Derp can perform.
-type Action =
-    | MoveForward
-    | TurnBack
-    | TurnLeft
-    | TurnRight
+type Action = MoveForward | TurnBack | TurnLeft | TurnRight
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Action =
@@ -29,10 +25,7 @@ module Action =
 
 
 /// Represents each of the things a Derp can see in front of itself.
-type Sight =
-    | Derp
-    | Food
-    | Empty
+type Sight = Derp | Food | Empty
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Sight =
@@ -49,28 +42,26 @@ type DerpBrain (stateCount : int, actionMatrix : double [,], stateMatrix : doubl
         actionMatrix
         |> Array2D.flatten
         |> Array.breakBy Action.count
-        |> Array.map Array.normalize
-        |> Array.map (fun col -> alias col)
+        |> Array.map (Array.normalize >> alias)
 
     let stateAliases =
         stateMatrix
         |> Array2D.flatten
         |> Array.breakBy stateCount
-        |> Array.map Array.normalize
-        |> Array.map (fun col -> alias col)
+        |> Array.map (Array.normalize >> alias)
 
     /// Represents a matrix of functions which choose the next action of the
     /// derp given its current state and what it's seeing
     let actionAliasMatrix = 
         match stateCount with
-        | 1 -> Array2D.init Sight.count stateCount (fun i j -> actionAliases.[i])
+        | 1 -> Array2D.init Sight.count stateCount (fun i _ -> actionAliases.[i])
         | _ -> Array2D.init Sight.count stateCount (fun i j -> actionAliases.[i + Sight.count * j])
 
     /// Represents a matrix of functions which choose the next state of the
     /// derp given its current state and what it's seeing
     let stateAliasMatrix  = 
         match stateCount with
-        | 1 -> Array2D.init Sight.count stateCount (fun i j -> stateAliases.[i])
+        | 1 -> Array2D.init Sight.count stateCount (fun i _ -> stateAliases.[i])
         | _ -> Array2D.init Sight.count stateCount (fun i j -> stateAliases.[i + Sight.count * j])
 
     /// Samples the proper action matrix to get the next action performed by the derp
@@ -85,13 +76,15 @@ type DerpBrain (stateCount : int, actionMatrix : double [,], stateMatrix : doubl
         let chooseState = stateAliasMatrix.[index, state] 
         chooseState ()
 
-    new (stateCount : int) = DerpBrain (stateCount, 
-                                        Array2D.init (stateCount * Sight.count) Action.count (fun _ _ -> rand.NextDouble ()), 
-                                        Array2D.init (stateCount * Sight.count) stateCount   (fun _ _ -> rand.NextDouble ()))
+    new (stateCount : int) =
+        DerpBrain (stateCount, 
+                   Array2D.init (stateCount * Sight.count) Action.count (fun _ _ -> rand.NextDouble ()), 
+                   Array2D.init (stateCount * Sight.count) stateCount   (fun _ _ -> rand.NextDouble ()))
 
-    new (stateCount : int, dna : DNA) = DerpBrain (stateCount,
-                                                   Array.elevate dna.Actionsome (stateCount * Sight.count) Action.count,
-                                                   Array.elevate dna.Statesome (stateCount * Sight.count) stateCount)
+    new (stateCount : int, dna : DNA) = 
+        DerpBrain (stateCount,
+                   Array.elevate dna.Actionsome (stateCount * Sight.count) Action.count,
+                   Array.elevate dna.Statesome (stateCount * Sight.count) stateCount)
 
     member this.StateCount = stateCount
 

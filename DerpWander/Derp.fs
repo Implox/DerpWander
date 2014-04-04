@@ -8,12 +8,10 @@ open Util
 open GeneticAlg
 open DerpBrain
 
+type Status = Alive | Dead
+
 /// Represents each of the possible orientations of a Derp.
-type Orientation =
-    | North
-    | South
-    | East
-    | West
+type Orientation = North | South | East | West
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Orientation =
@@ -56,6 +54,7 @@ module Orientation =
 type Tracker () =
     let mutable timesMoved = 0
     let mutable plantsEaten = 0
+    let mutable age = 0
     let visitedCells = HashSet<Point2> ()
 
     /// The number of times a Derp has successfully moved to a new location in
@@ -70,28 +69,44 @@ type Tracker () =
     /// Set of all the unique locations a Derp has visited during a generation.
     member this.VisitedCells with get () = visitedCells
 
+    member this.Age with get () = age
+
+    /// Incremenets the age counter by one.
+    member this.SuccAge () = age <- age + 1
+
     /// Increments the move counter by one
-    member this.SuccMoves () =
-        timesMoved <- timesMoved + 1
+    member this.SuccMoves () = timesMoved <- timesMoved + 1
 
     /// Increments the plant counter by one
-    member this.SuccPlants () = 
-        plantsEaten <- plantsEaten + 1
+    member this.SuccPlants () = plantsEaten <- plantsEaten + 1
 
     member this.AddCell pos = visitedCells.Add pos |> ignore
 
-    member this.GetFitness () = 
-        let foodFitness = float plantsEaten
+    member this.GetFitness () =
+        (*let foodFitness = float plantsEaten
         let moveFitness = (float visitedCells.Count) / (float timesMoved)
         let foodFactor = 0.65
         let moveFactor = 1.0 - foodFactor
-        (foodFactor * foodFitness) + (moveFactor * moveFitness)
+        (foodFactor * foodFitness) + (moveFactor * moveFitness)*)
+        float age
 
 
 /// Represents a Derp, a creature that walks around and tries to consume food.
 type Derp (brain : DerpBrain, orientation : Orientation) =
+    let mutable status = Alive
     let mutable orientation = orientation
     let mutable state = 0
+    let mutable energy = 5.0
+
+    /// The basal cost of a single step
+    /// This is the energy consumed in a single step if the derp remains
+    /// stationary.
+    let baseCost = -0.10
+
+    /// The factor by which the 
+    let movementCost =
+        let moveFactor = 1.5
+        (baseCost * moveFactor)
 
     let tracker = Tracker ()
 
@@ -99,22 +114,37 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
 
     member this.Brain = brain
 
+    member this.Status with get () = status
+    member this.IsAlive () = status = Alive
+
     member this.Orientation
         with get () = orientation
         and set value = orientation <- value
 
-    member this.State = state
+    member this.State with get () = state
+
+    member this.Energy with get () = energy
 
     member this.Actionsome = this.Brain.ActionMatrix |> Array2D.flatten
     member this.Statesome = this.Brain.StateMatrix |> Array2D.flatten
 
     member this.Tracker = tracker
 
+    member this.Eat () =
+        let foodEnergy = 1.0
+        energy <- energy + foodEnergy
+
+    member this.Die () = status <- Dead
+
     member this.Update (sight : Sight) =
         let action, nextState = this.Brain.Sample state sight
         state <- nextState
         orientation <- Orientation.resolveAction action orientation
-        if action = MoveForward then tracker.SuccMoves ()
+        this.Tracker.SuccAge ()
+        if action = MoveForward then
+            energy <- energy + movementCost
+            tracker.SuccMoves ()
+        else energy <- energy + baseCost
         action
 
     static member Mutator (dna : DNA) =
