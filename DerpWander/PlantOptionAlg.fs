@@ -39,7 +39,7 @@ module PlantGrowth =
             let bx, by = seed
             for x = (bx - iRadius) to (bx + iRadius) do
                 for y = (by - iRadius) to (by + iRadius) do
-                    if phi (x, y) seed then write (x % width, y % height)
+                    if phi (x, y) seed then write (x, y)
 
     /// Generates a random growth pattern
     let random worldSize write =

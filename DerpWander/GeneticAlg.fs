@@ -8,6 +8,8 @@ open Util
 /// Represents the genetic information of a member of a population
 type DNA = { Actionsome : double []; Statesome : double []; mutable Fitness : float; }
 
+let dna action state fitness = { Actionsome = action; Statesome = state; Fitness = fitness}
+
 type Population = DNA list
 
 /// Sorts DNAs by their fitness values (worst fitness is 0).

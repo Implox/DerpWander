@@ -10,7 +10,7 @@ type GrowthPatternOption = Clumped | NearBottom | Rows | Random
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module GrowthPatternOption =
-    let resolve (pattern : GrowthPatternOption) =
+    let toFunc (pattern : GrowthPatternOption) =
         match pattern with
         | Clumped -> PlantOptionAlg.PlantGrowth.clumped
         | NearBottom -> PlantOptionAlg.PlantGrowth.nearBottom
@@ -22,7 +22,7 @@ type PlantRespawnOption = Nearby | Anywhere | Never
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module PlantRespawnOption =
-    let resolve (respawnOption : PlantRespawnOption) =
+    let toFunc (respawnOption : PlantRespawnOption) =
         match respawnOption with
         | Nearby -> PlantOptionAlg.PlantRespawn.anywhere
         | Anywhere -> PlantOptionAlg.PlantRespawn.anywhere
@@ -33,7 +33,7 @@ type DerpRespawnOption = Random | Center | SameAsParent
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DerpRespawnOption =
-    let resolve (respawnOption : DerpRespawnOption) =
+    let toFunc (respawnOption : DerpRespawnOption) =
         match respawnOption with
         | Random        -> DerpOptionAlg.random
         | Center        -> failwith "Not Implemented"
@@ -71,13 +71,13 @@ type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int,
     member this.StateCount = stateCount
 
     /// The function used to generate plant growth in the world.
-    member this.PlantGrowthFunc = GrowthPatternOption.resolve growthOption
+    member this.PlantGrowthFunc = GrowthPatternOption.toFunc growthOption
 
     /// The function used to respawn eaten plants.
-    member this.PlantRespawnFunc = PlantRespawnOption.resolve plantRespawnOption
+    member this.PlantRespawnFunc = PlantRespawnOption.toFunc plantRespawnOption
 
     /// The function used to respawn derps after a generation.
-    member this.DerpRespawnOp = DerpRespawnOption.resolve derpRespawnOption
+    member this.DerpRespawnOp = DerpRespawnOption.toFunc derpRespawnOption
 
     /// The GenSpeed option for the world.
     member this.Speed

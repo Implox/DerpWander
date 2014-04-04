@@ -71,12 +71,9 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
                                     yield DerpBrain (optionSet.StateCount)], 
                                  0)
 
-    member this.Derps =
-        derps
-        |> Seq.map snd
-        |> Seq.toList
+    member this.Derps = derps |> Seq.map snd |> Seq.toList
 
-    /// Updates the world a single generation.
+    /// Updates the world a single generation
     member this.Update () =
         let moveDerp (x, y) (nX, nY) (derp : Derp) =
             map.[x, y] <- Cell.Empty
@@ -95,21 +92,20 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
             | Cell.Derp _ -> false
             | _ -> true
 
+        let liveDerps = derps |> Array.filter (snd >> Derp.IsAlive)
         for i = 0 to derps.Length - 1 do
             let pos, derp = derps.[i]
-            if derp.IsAlive () then
-                if derp.Energy <= 0.0 then derp.Die ()
-                else
-                    let foreCoord = wrap <| coordSeen derp.Orientation pos
-                    let sight = matchSight foreCoord
-                    let action = derp.Update sight
-                    if action = MoveForward then
-                        let nPos = foreCoord
-                        if canMoveTo nPos then
-                            moveDerp pos nPos derp
-                            derp.Tracker.AddCell nPos
-                            derps.[i] <- (nPos, derp)
-                    else moveDerp pos pos derp
+            if derp.Energy <= 0.0 then derp.Die ()
+            else
+                let foreCoord = wrap <| coordSeen derp.Orientation pos
+                let sight = matchSight foreCoord
+                let action = derp.Update sight
+                if action = MoveForward then
+                    let nPos = foreCoord
+                    if canMoveTo nPos then
+                        moveDerp pos nPos derp
+                        derps.[i] <- (nPos, derp)
+                else moveDerp pos pos derp
             
     /// The OptionSet for this world.
     member this.Options = optionSet
