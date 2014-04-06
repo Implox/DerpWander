@@ -40,13 +40,17 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
     /// Respawns a plant using the chosen respawn function.
     let respawnPlant p =
         let spawn = optionSet.PlantRespawnFunc
-        let write cell (x, y) = map.[x, y] <- cell
-        let writeFood = write Cell.Food
-        let isEligible p =
+        let write cell (x, y) = 
             let x, y = wrap p
-            match map.[x, y] with
-            | Cell.Empty -> true
-            | _ -> false
+            map.[x, y] <- cell
+        let writeFood = write Cell.Food
+        let isEligible candidate =
+            if candidate = p then false
+            else
+                let x, y = wrap candidate
+                match map.[x, y] with
+                | Cell.Empty -> true
+                | _ -> false
         spawn isEligible writeFood size p
 
     /// Gets the coordinate that is in front of a given Derp.

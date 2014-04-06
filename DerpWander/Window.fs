@@ -72,7 +72,6 @@ type GraphicsWindow (world : World) as this =
         e.Graphics.CompositingQuality <- Drawing2D.CompositingQuality.HighSpeed
         e.Graphics.CompositingMode <- Drawing2D.CompositingMode.SourceOver
         e.Graphics.InterpolationMode <- Drawing2D.InterpolationMode.NearestNeighbor
-
         for row = 0 to world.Height - 1 do
             for col = 0 to world.Width - 1 do
                     let point = Point (col * 8, row * 8)
