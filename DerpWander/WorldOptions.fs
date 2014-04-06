@@ -1,23 +1,43 @@
 ﻿module WorldOptions
 
-open Util
 open PlantOptionAlg
 open DerpOptionAlg
 
 open System
 
-let plantGrowthFunctions = 
-    [("Clumped", PlantOptionAlg.PlantGrowth.clumped);
-     ("NearBottom", PlantOptionAlg.PlantGrowth.nearBottom);
-     ("Random", PlantOptionAlg.PlantGrowth.random)]
+/// Flags for plant growth patterns in the world.
+type GrowthPatternOption = Clumped | NearBottom | Rows | Random
 
-let plantRespawnFunctions =
-    [("Nearby", PlantOptionAlg.PlantRespawn.nearby);
-     ("Anywhere", PlantOptionAlg.PlantRespawn.anywhere);
-     ("Never", PlantOptionAlg.PlantRespawn.never)]
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module GrowthPatternOption =
+    let toFunc (pattern : GrowthPatternOption) =
+        match pattern with
+        | Clumped -> PlantOptionAlg.PlantGrowth.clumped
+        | NearBottom -> PlantOptionAlg.PlantGrowth.nearBottom
+        | Rows -> failwith "Not Implemented"
+        | Random -> PlantOptionAlg.PlantGrowth.random
 
-let derpRespawnFunctions =
-    [("Random", DerpOptionAlg.random)]
+/// Flags for where an eaten plant respawns.
+type PlantRespawnOption = Nearby | Anywhere | Never
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module PlantRespawnOption =
+    let toFunc (respawnOption : PlantRespawnOption) =
+        match respawnOption with
+        | Nearby -> PlantOptionAlg.PlantRespawn.nearby
+        | Anywhere -> PlantOptionAlg.PlantRespawn.anywhere
+        | Never -> PlantOptionAlg.PlantRespawn.never
+
+/// Flags for where Derps spawn every new generation.
+type DerpRespawnOption = Random | Center | SameAsParent
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module DerpRespawnOption =
+    let toFunc (respawnOption : DerpRespawnOption) =
+        match respawnOption with
+        | Random        -> DerpOptionAlg.random
+        | Center        -> failwith "Not Implemented"
+        | SameAsParent  -> failwith "Not Implemented"
 
 /// Flags for how fast the world updates (in milliseconds per frame).
 type GenSpeed =
@@ -31,8 +51,8 @@ type GenSpeed =
 
 /// Represents a complete set of options for a World.
 type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int, 
-                growthOption : string, plantRespawnOption : string,
-                derpRespawnOption : string, speed : GenSpeed,
+                growthOption : GrowthPatternOption, plantRespawnOption : PlantRespawnOption,
+                derpRespawnOption : DerpRespawnOption, speed : GenSpeed,
                 mutationThreshold : float, plantRespawnThreshold : float) =
 
     let mutable speed = speed
@@ -51,13 +71,13 @@ type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int,
     member this.StateCount = stateCount
 
     /// The function used to generate plant growth in the world.
-    member this.PlantGrowthFunc = growthOption |> mappedBy plantGrowthFunctions
+    member this.PlantGrowthFunc = GrowthPatternOption.toFunc growthOption
 
     /// The function used to respawn eaten plants.
-    member this.PlantRespawnFunc = plantRespawnOption |> mappedBy plantRespawnFunctions
+    member this.PlantRespawnFunc = PlantRespawnOption.toFunc plantRespawnOption
 
     /// The function used to respawn derps after a generation.
-    member this.DerpRespawnOp = derpRespawnOption |> mappedBy derpRespawnFunctions 
+    member this.DerpRespawnOp = DerpRespawnOption.toFunc derpRespawnOption
 
     /// The GenSpeed option for the world.
     member this.Speed

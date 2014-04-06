@@ -17,9 +17,9 @@ let main args =
     let options = new OptionSet ((128, 96), 
                                  25,
                                  3,
-                                 "Clumped", 
-                                 "Anywhere", 
-                                 "Random", 
+                                 GrowthPatternOption.Clumped, 
+                                 PlantRespawnOption.Nearby, 
+                                 DerpRespawnOption.Random, 
                                  GenSpeed.Fastest,
                                  0.05,
                                  0.50)
