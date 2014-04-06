@@ -71,6 +71,11 @@ let (%%) x m = ((x % m) + m) % m
 /// Wraps a coordinate pair to the width and height dimensions of a world
 let wrap (w, h) (x, y) = (x %% w, y %% h)
 
+let mappedBy (map : ('a * 'b) list) (key : 'a) =
+    map 
+    |> List.find (fun (k, v) -> key = k)
+    |> snd
+
 /// Creates a new bitmap which contains a given region within a given bitmap
 let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =
     let newMap = new Bitmap (region.Width, region.Height)

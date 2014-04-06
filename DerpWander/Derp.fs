@@ -10,13 +10,12 @@ open DerpBrain
 
 type Status = Alive | Dead
 
-/// Represents each of the possible orientations of a Derp.
+/// Represents each of the possible orientations of a Derp
 type Orientation = North | South | East | West
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Orientation =
-
-    /// Returns an orientation based on an action taken by a Derp.
+    /// Returns an orientation based on an action taken by a Derp
     let resolveAction (action : Action) (orientation : Orientation) =
         match action, orientation with
         | MoveForward, _ -> orientation
@@ -33,18 +32,18 @@ module Orientation =
         | TurnBack,    East  -> West
         | TurnBack,    West  -> East
         
-    /// All the possible orientations.
+    /// All the possible orientations
     let cases = 
         FSharpType.GetUnionCases typedefof<Orientation> 
         |> Array.map (fun case -> FSharpValue.MakeUnion (case, [||]))
 
     let count = Array.length cases
 
-    /// Returns a random orientation.
+    /// Returns a random orientation
     let randomCase () = cases.[rand.Next count] :?> Orientation
 
 /// Stores information about a Derp for the purpose of computing its fitness 
-/// at the end of a generation.
+/// at the end of a generation
 type Tracker () =
     let mutable plantsEaten = 0
     let mutable age = 0

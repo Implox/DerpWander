@@ -20,7 +20,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
     let derpCount = optionSet.DerpCount
     let wrap = wrap size
     let derps = 
-        optionSet.DerpRespawnOp derpBrains optionSet.WorldSize 
+        optionSet.DerpRespawnFunc derpBrains optionSet.WorldSize 
             |> Seq.map (fun brainPosPair -> (brainPosPair.Pos, Derp.Derp brainPosPair.Brain))
             |> Seq.toArray
 
@@ -44,11 +44,13 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
             let x, y = wrap (x, y)
             map.[x, y] <- cell
         let writeFood = write Cell.Food
-        let isEligible p =
-            let x, y = wrap p
-            match map.[x, y] with
-            | Cell.Empty -> true
-            | _ -> false
+        let isEligible candidate =
+            let x, y = wrap candidate
+            if (x, y) = p then false
+            else
+                match map.[x, y] with
+                | Cell.Empty -> true
+                | _ -> false
         spawn isEligible writeFood size p
 
     /// Gets the coordinate that is in front of a given Derp.

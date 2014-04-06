@@ -17,9 +17,9 @@ let main args =
     let options = new OptionSet ((128, 96), 
                                  25,
                                  3,
-                                 GrowthPatternOption.Clumped, 
-                                 PlantRespawnOption.Nearby, 
-                                 DerpRespawnOption.Random, 
+                                 "Clumped", 
+                                 "Anywhere", 
+                                 "Random", 
                                  GenSpeed.Fastest,
                                  0.05,
                                  0.50)
@@ -32,7 +32,7 @@ let main args =
 
     Application.EnableVisualStyles ()
     let window = new GraphicsWindow (world)
-    printfn "Number of derps: %i\nStates per Derp brain: %i\nSkipSize: %i generations\nRight click on the window to modify options...\n" 
+    printfn "Number of derps: %i\nStates per Derp brain: %i\nTimeChunk: %i generations\nRight click on the window to modify options...\n" 
             options.DerpCount 
             options.StateCount 
             timeChunk
