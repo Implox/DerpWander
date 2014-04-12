@@ -52,16 +52,12 @@ type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int,
 
     /// The function used to generate plant growth in the world.
     member this.PlantGrowthFunc = growthOption |> mappedBy plantGrowthFuncs
-    //member this.PlantGrowthFunc = GrowthPatternOption.toFunc growthOption
 
     /// The function used to respawn eaten plants.
     member this.PlantRespawnFunc = plantRespawnOption |> mappedBy plantRespawnFuncs
-    //member this.PlantRespawnFunc = PlantRespawnOption.toFunc plantRespawnOption
 
     /// The function used to respawn derps after a generation.
     member this.DerpRespawnFunc = derpRespawnOption |> mappedBy derpRespawnFuncs
-    //member this.DerpRespawnOp = DerpRespawnOption.toFunc derpRespawnOption
-
 
     /// The GenSpeed option for the world.
     member this.Speed

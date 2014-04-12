@@ -68,7 +68,7 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
     let mutable status = Alive
     let mutable orientation = orientation
     let mutable state = 0
-    let mutable energy = 5.0
+    let mutable energy = 10.0
 
     /// The basal cost of a single step
     /// This is the energy consumed in a single step if the derp remains stationary.
