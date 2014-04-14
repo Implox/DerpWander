@@ -35,6 +35,8 @@ type GraphicsWindow (world : World) as this =
 
     let setSpeed (newSpeed : string) =
         world.Options.Speed <- GenSpeed.Parse (typedefof<GenSpeed>, newSpeed) :?> GenSpeed
+    let setPlantGrowth func = world.Options.PlantGrowthFunc <- func
+    let setPlantRespawn func = world.Options.PlantRespawnFunc <- func
 
     do
         this.Text <- "DerpWander"
@@ -61,16 +63,25 @@ type GraphicsWindow (world : World) as this =
         e.Handled <- true
 
     override this.OnMouseClick e =
+        let menuItem update option name = 
+            new MenuItem (name, new EventHandler (fun _ _ -> update option))
+
+        let speedItems =
+            GenSpeed.GetNames typedefof<GenSpeed>
+            |> Array.map (fun name -> (menuItem setSpeed name name))
+        let plantGrowthItems = 
+            WorldOptions.plantGrowthFuncs
+            |> Array.map (fun (name, func) -> menuItem setPlantGrowth func name)
+        let plantRespawnItems =
+            WorldOptions.plantRespawnFuncs
+            |> Array.map (fun (name, func) -> menuItem setPlantRespawn func name)
+
+        let speeds = new MenuItem ("Speeds", speedItems)
+        let growths = new MenuItem ("Plant Growth", plantGrowthItems)
+        let respawns = new MenuItem ("Plant Respawn", plantRespawnItems)
         match e.Button with
         | MouseButtons.Right ->
-            let menuItems =
-                [|
-                    let names = GenSpeed.GetNames typedefof<GenSpeed>
-                    for name in names do 
-                        let item = new MenuItem(name)
-                        item.Click.Add (fun _ -> setSpeed name)
-                        yield item
-                |]
+            let menuItems = [| speeds; growths; respawns |]
             let speedSelect = new ContextMenu (menuItems)
             speedSelect.Show (this, e.Location)
         | _ -> ()

@@ -7,17 +7,17 @@ open DerpOptionAlg
 open System
 
 let plantGrowthFuncs = 
-    [("Clumped", PlantOptionAlg.PlantGrowth.clumped);
-     ("NearBottom", PlantOptionAlg.PlantGrowth.nearBottom);
-     ("Random", PlantOptionAlg.PlantGrowth.random)]
+    [|("Clumped", PlantOptionAlg.PlantGrowth.clumped);
+     ("Near Bottom", PlantOptionAlg.PlantGrowth.nearBottom);
+     ("Random", PlantOptionAlg.PlantGrowth.random)|]
 
 let plantRespawnFuncs =
-    [("Nearby", PlantOptionAlg.PlantRespawn.nearby);
+    [|("Nearby", PlantOptionAlg.PlantRespawn.nearby);
      ("Anywhere", PlantOptionAlg.PlantRespawn.anywhere);
-     ("Never", PlantOptionAlg.PlantRespawn.never)]
+     ("Never", PlantOptionAlg.PlantRespawn.never)|]
 
 let derpRespawnFuncs =
-    [("Random", DerpOptionAlg.random)]
+    [|("Random", DerpOptionAlg.random)|]
 
 /// Flags for how fast the world updates (in milliseconds per frame).
 type GenSpeed =
@@ -36,6 +36,9 @@ type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int,
                 mutationThreshold : float, plantRespawnThreshold : float) =
 
     let mutable speed = speed
+    let mutable plantGrowthFunc = growthOption |> mappedBy plantGrowthFuncs
+    let mutable plantRespawnFunc = plantRespawnOption |> mappedBy plantRespawnFuncs
+    let mutable derpRespawnFunc = derpRespawnOption |> mappedBy derpRespawnFuncs
 
     /// The square side length of the world.
     member this.WorldSize = worldSize
@@ -51,13 +54,19 @@ type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int,
     member this.StateCount = stateCount
 
     /// The function used to generate plant growth in the world.
-    member this.PlantGrowthFunc = growthOption |> mappedBy plantGrowthFuncs
+    member this.PlantGrowthFunc
+        with get () = plantGrowthFunc
+        and set value = plantGrowthFunc <- value
 
     /// The function used to respawn eaten plants.
-    member this.PlantRespawnFunc = plantRespawnOption |> mappedBy plantRespawnFuncs
+    member this.PlantRespawnFunc
+        with get () = plantRespawnFunc
+        and set value = plantRespawnFunc <- value
 
     /// The function used to respawn derps after a generation.
-    member this.DerpRespawnFunc = derpRespawnOption |> mappedBy derpRespawnFuncs
+    member this.DerpRespawnFunc
+        with get () = derpRespawnFunc
+        and set value = derpRespawnFunc <- value
 
     /// The GenSpeed option for the world.
     member this.Speed
