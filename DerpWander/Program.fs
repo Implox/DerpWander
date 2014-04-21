@@ -2,7 +2,6 @@
 
 open System
 open System.Windows.Forms
-
 open Util
 open GeneticAlg
 open DerpBrain
@@ -21,7 +20,7 @@ let nextGeneration (timeChunk : int) writeLong writeBest avgLong avgBest (window
     writeBest (world.Generation % timeChunk) best
     writeLong (world.Generation % timeChunk) avg
 
-    if (world.Options.Speed = GenSpeed.FastestNoDisp && world.Generation % timeChunk = 0) || (world.Options.Speed <> GenSpeed.FastestNoDisp) then
+    if (options.Speed = GenSpeed.FastestNoDisp && world.Generation % timeChunk = 0) || (options.Speed <> GenSpeed.FastestNoDisp) then
         printfn "Generation %i" (world.Generation)
         printfn "Best (days): %i" <| int best
         printfn "Avg (days): %.2f" avg
@@ -30,26 +29,21 @@ let nextGeneration (timeChunk : int) writeLong writeBest avgLong avgBest (window
 
     let population =
         derps |> List.map (fun derp -> dna derp.Actionsome derp.Statesome derp.Tracker.Fitness)
-    let nextStep = evolveStep population Derp.Derp.Mutator options.MutationThreshold
+    let nextStep = evolveStep population Derp.Mutator options.MutationThreshold
     nextStep |> List.map (fun dna -> DerpBrain (options.StateCount, dna))
 
 /// Simulates the world for a single generation.
-let rec simGeneration (timeChunk : int) (last : DateTime) (day : int) (window : GraphicsWindow) =
-    let longAverage = Array.create timeChunk 0.0
-    let bestAverage = Array.create timeChunk 0.0
-
-    let write (arr : _ array) index value = arr.[index] <- value
-    let writeLong = write longAverage
-    let writeBest = write bestAverage
-
-    let avgLong () = Array.average longAverage
-    let avgBest () = Array.average bestAverage
-
+let rec simGeneration (timeChunk : int) longAvg bestAvg (last : DateTime) (day : int) (window : GraphicsWindow) =
     let world = window.World
     let options = world.Options
 
+    let write (arr : _ array) index value = arr.[index] <- value
+    let writeLong = write longAvg
+    let writeBest = write bestAvg
+
+    let avgLong () = Array.average longAvg
+    let avgBest () = Array.average bestAvg
     let nextGen = nextGeneration timeChunk writeLong writeBest avgLong avgBest
-    let simGen = simGeneration timeChunk
 
     if window.Visible then
         let current = DateTime.Now
@@ -57,14 +51,14 @@ let rec simGeneration (timeChunk : int) (last : DateTime) (day : int) (window : 
         if dTime >= int options.Speed then
             if world.Derps |> List.forall (not << Derp.IsAlive) then
                 window.World <- new World (options, nextGen window, world.Generation + 1)
-                simGeneration timeChunk current 1 window
+                simGeneration timeChunk longAvg bestAvg current 1 window
             else
                 Application.DoEvents ()
                 window.Update ()
-                simGen current (day + 1) window
+                simGeneration timeChunk longAvg bestAvg current (day + 1) window
         else
             Application.DoEvents ()
-            simGen last day window
+            simGeneration timeChunk longAvg bestAvg last day window
     else ()
 
 [<EntryPoint>]
@@ -78,16 +72,22 @@ let main args =
                                   GenSpeed.Fastest,
                                   0.05,
                                   0.50)
+
     let world = new World (options)
     let window = new GraphicsWindow (world)
     let timeChunk = 250
 
+    let longAverage = Array.create timeChunk 0.0
+    let bestAverage = Array.create timeChunk 0.0
+
     Console.BufferHeight <- int Int16.MaxValue - 1
     Application.EnableVisualStyles ()
-    printfn "Number of derps: %i\nStates per Derp brain: %i\nTimeChunk: %i generations\nRight click on the window to modify options...\n" 
-            options.DerpCount
-            options.StateCount
-            timeChunk
+
+    printfn "Number of derps: %i" options.DerpCount
+    printfn "States per Derp brain: %i" options.StateCount
+    printfn "TimeChunk: %i generations" timeChunk
+    printfn "Right click on the window to modify options..."
+
     window.Show ()
-    simGeneration timeChunk DateTime.Now 1 window
+    simGeneration timeChunk longAverage bestAverage DateTime.Now 1 window
     0
