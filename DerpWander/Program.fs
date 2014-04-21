@@ -11,8 +11,7 @@ open World
 open Window
 
 /// Updates a population for the next generation.
-let nextGeneration (timeChunk : int) writeLong writeBest avgLong avgBest (window : GraphicsWindow) = 
-    let world = window.World
+let nextGeneration (timeChunk : int) writeLong writeBest avgLong avgBest (world : World) = 
     let options = world.Options
     let derps = world.Derps
     let best = (derps |> List.maxBy (fun derp -> derp.Tracker.Fitness)).Tracker.Fitness
@@ -33,10 +32,7 @@ let nextGeneration (timeChunk : int) writeLong writeBest avgLong avgBest (window
     nextStep |> List.map (fun dna -> DerpBrain (options.StateCount, dna))
 
 /// Simulates the world for a single generation.
-let rec simGeneration (timeChunk : int) longAvg bestAvg (last : DateTime) (day : int) (window : GraphicsWindow) =
-    let world = window.World
-    let options = world.Options
-
+let simGeneration (timeChunk : int) longAvg bestAvg (window : GraphicsWindow) =
     let write (arr : _ array) index value = arr.[index] <- value
     let writeLong = write longAvg
     let writeBest = write bestAvg
@@ -45,21 +41,25 @@ let rec simGeneration (timeChunk : int) longAvg bestAvg (last : DateTime) (day :
     let avgBest () = Array.average bestAvg
     let nextGen = nextGeneration timeChunk writeLong writeBest avgLong avgBest
 
-    if window.Visible then
-        let current = DateTime.Now
-        let dTime = int (current - last).TotalMilliseconds
-        if dTime >= int options.Speed then
-            if world.Derps |> List.forall (not << Derp.IsAlive) then
-                window.World <- new World (options, nextGen window, world.Generation + 1)
-                simGeneration timeChunk longAvg bestAvg current 1 window
+    let rec iter (last : DateTime) (day : int) (window : GraphicsWindow) =
+        let world = window.World
+        let options = world.Options
+        if window.Visible then
+            let current = DateTime.Now
+            let dTime = int (current - last).TotalMilliseconds
+            if dTime >= int options.Speed then
+                if world.Derps |> List.forall (not << Derp.IsAlive) then
+                    window.World <- new World (options, nextGen world, world.Generation + 1)
+                    iter current 1 window
+                else
+                    Application.DoEvents ()
+                    window.Update ()
+                    iter current (day + 1) window
             else
                 Application.DoEvents ()
-                window.Update ()
-                simGeneration timeChunk longAvg bestAvg current (day + 1) window
-        else
-            Application.DoEvents ()
-            simGeneration timeChunk longAvg bestAvg last day window
-    else ()
+                iter last day window
+        else ()
+    iter DateTime.Now 1 window
 
 [<EntryPoint>]
 let main args =
@@ -86,8 +86,8 @@ let main args =
     printfn "Number of derps: %i" options.DerpCount
     printfn "States per Derp brain: %i" options.StateCount
     printfn "TimeChunk: %i generations" timeChunk
-    printfn "Right click on the window to modify options..."
+    printfn "Right click on the window to modify options...\n"
 
     window.Show ()
-    simGeneration timeChunk longAverage bestAverage DateTime.Now 1 window
+    simGeneration timeChunk longAverage bestAverage window
     0

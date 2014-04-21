@@ -69,9 +69,11 @@ type GraphicsWindow (world : World) as this =
         let speedItems =
             GenSpeed.GetNames typedefof<GenSpeed>
             |> Array.map (fun name -> (menuItem setSpeed name name))
+
         let plantGrowthItems = 
             WorldOptions.plantGrowthFuncs
             |> Array.map (fun (name, func) -> menuItem setPlantGrowth func name)
+
         let plantRespawnItems =
             WorldOptions.plantRespawnFuncs
             |> Array.map (fun (name, func) -> menuItem setPlantRespawn func name)
@@ -79,6 +81,7 @@ type GraphicsWindow (world : World) as this =
         let speeds = new MenuItem ("Speeds", speedItems)
         let growths = new MenuItem ("Plant Growth", plantGrowthItems)
         let respawns = new MenuItem ("Plant Respawn", plantRespawnItems)
+
         match e.Button with
         | MouseButtons.Right ->
             let menuItems = [| speeds; growths; respawns |]
