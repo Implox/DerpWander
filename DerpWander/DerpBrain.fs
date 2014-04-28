@@ -81,10 +81,10 @@ type DerpBrain (stateCount : int, actionMatrix : double [,], stateMatrix : doubl
                    Array2D.init (stateCount * Sight.count) Action.count (fun _ _ -> rand.NextDouble ()), 
                    Array2D.init (stateCount * Sight.count) stateCount   (fun _ _ -> rand.NextDouble ()))
 
-    new (stateCount : int, dna : DNA) = 
+    new (stateCount : int, genome : Genome.T) = 
         DerpBrain (stateCount,
-                   Array.elevate dna.Actionsome (stateCount * Sight.count) Action.count,
-                   Array.elevate dna.Statesome (stateCount * Sight.count) stateCount)
+                   Array.elevate genome.ActionGene (stateCount * Sight.count) Action.count,
+                   Array.elevate genome.StateGene (stateCount * Sight.count) stateCount)
 
     member this.StateCount = stateCount
 

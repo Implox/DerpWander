@@ -8,48 +8,71 @@ open DerpBrain
 open Derp
 open WorldOptions
 open World
-open Window
+open GraphicsWindow
 
-/// Updates a population for the next generation.
-let nextGeneration (timeChunk : int) writeLong writeBest avgLong avgBest (world : World) = 
+/// The number of generations to skip before printing information to the console.
+let timeChunk = 250
+
+/// Stores the average fitness for the last [timeChunk] generations
+let longAverage = Array.create timeChunk 0.0
+
+/// Stores the best fitness for the last [timeChunk] generations
+let bestAverage = Array.create timeChunk 0.0
+
+/// Prints information of a generation and species history to the console
+let printInfo gen avg best longAvg bestAvg =
+    printfn "Generation %i" gen
+    printfn "Avg (days): %.2f" avg
+    printfn "Best (days): %i" best
+    printfn "%i-Generation Average (days): %.2f" timeChunk longAvg
+    printfn "%i-Generation Best Average (days): %.2f\n" timeChunk bestAvg
+
+/// Updates a population for the next generation
+let nextGeneration (world : World) = 
     let options = world.Options
     let derps = world.Derps
-    let best = (derps |> List.maxBy (fun derp -> derp.Tracker.Fitness)).Tracker.Fitness
-    let avg = (derps |> List.averageBy (fun derp -> float derp.Tracker.Age))
-    writeBest (world.Generation % timeChunk) best
-    writeLong (world.Generation % timeChunk) avg
 
-    if (options.Speed = GenSpeed.FastestNoDisp && world.Generation % timeChunk = 0) || (options.Speed <> GenSpeed.FastestNoDisp) then
-        printfn "Generation %i" (world.Generation)
-        printfn "Best (days): %i" <| int best
-        printfn "Avg (days): %.2f" avg
-        printfn "%i-Generation Average (days): %.2f" timeChunk (if world.Generation >= timeChunk then avgLong () else Double.NaN)
-        printfn "%i-Generation Best Average (days): %.2f\n" timeChunk (if world.Generation >= timeChunk then avgBest () else Double.NaN)
+    let evolve = 
+        let mutator = Derp.Mutator
+        let codonThreshold = options.derpOptions.codonMutationThreshold
+        let genomeThreshold = options.derpOptions.genomeMutationThreshold
+        let dominanceThreshold = options.derpOptions.dominanceThreshold
+        evolve mutator codonThreshold genomeThreshold dominanceThreshold
 
-    let population =
-        derps |> List.map (fun derp -> dna derp.Actionsome derp.Statesome derp.Tracker.Fitness)
-    let nextStep = evolveStep population Derp.Mutator options.MutationThreshold
-    nextStep |> List.map (fun dna -> DerpBrain (options.StateCount, dna))
+    /// Stores historical information and prints it
+    do
+        let speedVal = GeneralOptions.speedValue options.generalOptions
+        let gen = world.Generation
+        let avg = (derps |> List.averageBy (fun derp -> float derp.Tracker.Age))
+        let best = (derps |> List.maxBy (fun derp -> derp.Tracker.Fitness)).Tracker.Fitness
+        longAverage.[gen % timeChunk] <- avg
+        bestAverage.[gen % timeChunk] <- float best
+
+        let longAvg = if world.Generation >= timeChunk then longAverage |> Array.average else Double.NaN
+        let bestAvg = if world.Generation >= timeChunk then bestAverage |> Array.average else Double.NaN
+
+        if (speedVal = 0 && world.Generation % timeChunk = 0) || (speedVal <> 0)
+            then printInfo gen avg best longAvg bestAvg
+
+    derps
+    |> List.map (fun derp -> ((Genome.create (derp.ActionGene, derp.StateGene)), derp.Tracker.Fitness))
+    |> evolve 
+    |> List.map (fun genome -> DerpBrain (options.derpOptions.stateCount, genome))
 
 /// Simulates the world for a single generation.
-let simGeneration (timeChunk : int) longAvg bestAvg (window : GraphicsWindow) =
-    let write (arr : _ array) index value = arr.[index] <- value
-    let writeLong = write longAvg
-    let writeBest = write bestAvg
-
-    let avgLong () = Array.average longAvg
-    let avgBest () = Array.average bestAvg
-    let nextGen = nextGeneration timeChunk writeLong writeBest avgLong avgBest
-
+let simGeneration (window : GraphicsWindow) =
     let rec iter (last : DateTime) (day : int) (window : GraphicsWindow) =
         let world = window.World
         let options = world.Options
+        let genSpeed = GeneralOptions.speedValue options.generalOptions
         if window.Visible then
             let current = DateTime.Now
             let dTime = int (current - last).TotalMilliseconds
-            if dTime >= int options.Speed then
+            if dTime >= genSpeed then
                 if world.Derps |> List.forall (not << Derp.IsAlive) then
-                    window.World <- new World (options, nextGen world, world.Generation + 1)
+                    let nextGen = nextGeneration world
+                    let nextWorld = World (options, nextGen, world.Generation + 1)
+                    window.World <- nextWorld
                     iter current 1 window
                 else
                     Application.DoEvents ()
@@ -58,36 +81,26 @@ let simGeneration (timeChunk : int) longAvg bestAvg (window : GraphicsWindow) =
             else
                 Application.DoEvents ()
                 iter last day window
-        else ()
     iter DateTime.Now 1 window
 
 [<EntryPoint>]
 let main args =
-    let options = new OptionSet ((128, 96),
-                                  25,
-                                  3,
-                                  "Clumped",
-                                  "Anywhere",
-                                  "Random",
-                                  GenSpeed.Fastest,
-                                  0.05,
-                                  0.50)
+    let genOps = GeneralOptions.create (128, 96) 25 "Fastest"
+    let derpOps = DerpOptions.create 0.60 0.60 0.20 3 "Random"
+    let plantOps = PlantOptions.create 0.50 "Clumped" "Nearby"
+    let options = CompleteOptionSet.create genOps derpOps plantOps
 
     let world = new World (options)
     let window = new GraphicsWindow (world)
-    let timeChunk = 250
-
-    let longAverage = Array.create timeChunk 0.0
-    let bestAverage = Array.create timeChunk 0.0
 
     Console.BufferHeight <- int Int16.MaxValue - 1
     Application.EnableVisualStyles ()
 
-    printfn "Number of derps: %i" options.DerpCount
-    printfn "States per Derp brain: %i" options.StateCount
+    printfn "Number of derps: %i" options.generalOptions.derpCount
+    printfn "States per Derp brain: %i" options.derpOptions.stateCount
     printfn "TimeChunk: %i generations" timeChunk
     printfn "Right click on the window to modify options...\n"
 
     window.Show ()
-    simGeneration timeChunk longAverage bestAverage window
+    simGeneration window
     0

@@ -14,19 +14,25 @@ open Derp
 /// Represents a cell in the world.
 type Cell = Empty | Food | Derp of Derp
 
-type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int) =
-    let size = optionSet.WorldSize
+type World (optionSet : CompleteOptionSet.T, derpBrains : DerpBrain list, generation : int) =
+    let genOps = optionSet.generalOptions    
+    let derpOps = optionSet.derpOptions
+    let plantOps = optionSet.plantOptions
+
+    let size = genOps.worldSize
     let width, height = size
-    let derpCount = optionSet.DerpCount
+    let derpCount = genOps.derpCount
     let wrap = wrap size
-    let derps = 
-        optionSet.DerpRespawnFunc derpBrains optionSet.WorldSize 
-            |> Seq.map (fun brainPosPair -> (brainPosPair.Pos, Derp.Derp brainPosPair.Brain))
-            |> Seq.toArray
+
+    let derps =
+        let spawnFunc = DerpOptions.spawnFunc derpOps
+        spawnFunc derpBrains size
+        |> List.map (fun brainPosPair -> (brainPosPair.Pos, Derp.Derp brainPosPair.Brain))
+        |> Array.ofList
 
     let map =
         let temp = Array2D.create width height Cell.Empty
-        let grow = optionSet.PlantGrowthFunc
+        let grow = PlantOptions.growthFunc plantOps
         let write value p = 
             let x, y = wrap p
             temp.[x, y] <- value
@@ -34,12 +40,12 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
         let placeDerp derp = write (Cell.Derp derp)
 
         grow size placeFood
-        for (p, derp) in derps do placeDerp derp p
+        derps |> Array.iter (fun (p, derp) -> placeDerp derp p)
         temp
 
     /// Respawns a plant using the chosen respawn function.
     let respawnPlant p =
-        let spawn = optionSet.PlantRespawnFunc
+        let spawn = PlantOptions.respawnFunc plantOps
         let write cell (x, y) =
             let x, y = wrap (x, y)
             map.[x, y] <- cell
@@ -70,10 +76,13 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
         | Food   -> Sight.Food
         | Empty  -> Sight.Empty
 
-    new (optionSet) = new World (optionSet, 
-                                 [for i = 0 to optionSet.DerpCount - 1 do 
-                                    yield DerpBrain (optionSet.StateCount)], 
-                                 0)
+    new (optionSet : CompleteOptionSet.T) = 
+        let derpCount = optionSet.generalOptions.derpCount
+        let stateCount = optionSet.derpOptions.stateCount
+        new World (optionSet, 
+                   [for i = 0 to derpCount - 1 do 
+                        yield DerpBrain (stateCount)], 
+                   0)
 
     member this.Derps = derps |> Seq.map snd |> Seq.toList
 
@@ -85,7 +94,7 @@ type World (optionSet : OptionSet, derpBrains : DerpBrain list, generation : int
             | Cell.Food -> 
                 derp.Tracker.SuccPlants ()
                 derp.Eat ()
-                if rand.NextDouble () < optionSet.PlantRespawnThreshold
+                if rand.NextDouble () < optionSet.plantOptions.respawnThreshold
                     then respawnPlant (nX, nY)
             | _ -> ()
             map.[nX, nY] <- Cell.Derp derp

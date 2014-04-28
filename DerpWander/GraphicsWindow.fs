@@ -1,4 +1,5 @@
-﻿module Window
+﻿/// Contains the form in which all graphical information is displayed
+module GraphicsWindow
 
 open System
 open System.Drawing
@@ -10,33 +11,30 @@ open Derp
 open WorldOptions
 open World
 
-/// The form in which the world will be displayed graphically.
+let atlas = 
+    new System.Drawing.Bitmap (System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream "atlas_new.png")
+
+let tileSize = 8
+
+let rectangle x y w h = Rectangle (x, y, w, h)
+let makeTile x y = rectangle x y tileSize tileSize
+let tileAt x y = copyBitmapRegion atlas <| makeTile (x * tileSize) (y * tileSize)
+
+let blankSprite     = tileAt 0 0
+let foodSprite      = tileAt 1 0
+let derpEastSprite  = tileAt 2 0
+let derpWestSprite  = tileAt 3 0
+let derpSouthSprite = tileAt 4 0
+let derpNorthSprite = tileAt 5 0
+let derpDeadSprite  = tileAt 6 0
+
+/// The form in which the world will be displayed graphically
 type GraphicsWindow (world : World) as this =
     inherit Form ()
-
-    let atlas = 
-        new System.Drawing.Bitmap (System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream "atlas_new.png")
-
     let mutable world = world
+    let options = world.Options
 
-    let tileSize = 8
-
-    let rectangle x y w h = Rectangle(x, y, w, h)
-    let makeTile x y = rectangle x y tileSize tileSize
-    let tileAt x y = copyBitmapRegion atlas <| makeTile (x * tileSize) (y * tileSize)
-
-    let blankSprite     = tileAt 0 0
-    let foodSprite      = tileAt 1 0
-    let derpEastSprite  = tileAt 2 0
-    let derpWestSprite  = tileAt 3 0
-    let derpSouthSprite = tileAt 4 0
-    let derpNorthSprite = tileAt 5 0
-    let derpDeadSprite  = tileAt 6 0
-
-    let setSpeed (newSpeed : string) =
-        world.Options.Speed <- GenSpeed.Parse (typedefof<GenSpeed>, newSpeed) :?> GenSpeed
-    let setPlantGrowth func = world.Options.PlantGrowthFunc <- func
-    let setPlantRespawn func = world.Options.PlantRespawnFunc <- func
+    let setSpeed (newSpeed : string) = options.generalOptions.genSpeed <- newSpeed
 
     do
         this.Text <- "DerpWander"
@@ -48,9 +46,12 @@ type GraphicsWindow (world : World) as this =
         this.SetStyle (ControlStyles.OptimizedDoubleBuffer, true)
 
     member this.Update () =
-        world.Update ()
-        if world.Options.Speed <> GenSpeed.FastestNoDisp then
-            this.Invalidate ()
+        let speedVal = GeneralOptions.speedValue options.generalOptions
+        let paused = speedVal = -1
+        if not paused then
+            world.Update ()
+            let noDisplay = speedVal = 0
+            if not noDisplay then this.Invalidate ()
 
     member this.World
         with get () = world
@@ -59,6 +60,7 @@ type GraphicsWindow (world : World) as this =
     override this.OnKeyUp e =
         match e.KeyData with
         | Keys.Escape -> Environment.Exit 0
+        | Keys.Space -> setSpeed "Paused"
         | _ -> ()
         e.Handled <- true
 
@@ -67,25 +69,14 @@ type GraphicsWindow (world : World) as this =
             new MenuItem (name, new EventHandler (fun _ _ -> update option))
 
         let speedItems =
-            GenSpeed.GetNames typedefof<GenSpeed>
-            |> Array.map (fun name -> (menuItem setSpeed name name))
-
-        let plantGrowthItems = 
-            WorldOptions.plantGrowthFuncs
-            |> Array.map (fun (name, func) -> menuItem setPlantGrowth func name)
-
-        let plantRespawnItems =
-            WorldOptions.plantRespawnFuncs
-            |> Array.map (fun (name, func) -> menuItem setPlantRespawn func name)
+            genSpeeds
+            |> Array.map (fst >> (fun name -> (menuItem setSpeed name name)))
 
         let speeds = new MenuItem ("Speeds", speedItems)
-        let growths = new MenuItem ("Plant Growth", plantGrowthItems)
-        let respawns = new MenuItem ("Plant Respawn", plantRespawnItems)
 
         match e.Button with
         | MouseButtons.Right ->
-            let menuItems = [| speeds; growths; respawns |]
-            let speedSelect = new ContextMenu (menuItems)
+            let speedSelect = new ContextMenu ([| speeds |])
             speedSelect.Show (this, e.Location)
         | _ -> ()
 

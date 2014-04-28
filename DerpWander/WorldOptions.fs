@@ -7,74 +7,119 @@ open DerpOptionAlg
 open System
 
 let plantGrowthFuncs = 
-    [|("Clumped", PlantOptionAlg.PlantGrowth.clumped);
-     ("Near Bottom", PlantOptionAlg.PlantGrowth.nearBottom);
-     ("Random", PlantOptionAlg.PlantGrowth.random)|]
+    [| ("Clumped",     PlantOptionAlg.PlantGrowth.clumped);
+       ("Near Bottom", PlantOptionAlg.PlantGrowth.nearBottom);
+       ("Random",      PlantOptionAlg.PlantGrowth.random) |]
 
 let plantRespawnFuncs =
-    [|("Nearby", PlantOptionAlg.PlantRespawn.nearby);
-     ("Anywhere", PlantOptionAlg.PlantRespawn.anywhere);
-     ("Never", PlantOptionAlg.PlantRespawn.never)|]
+    [| ("Nearby",   PlantOptionAlg.PlantRespawn.nearby);
+       ("Anywhere", PlantOptionAlg.PlantRespawn.anywhere);
+       ("Never",    PlantOptionAlg.PlantRespawn.never) |]
 
-let derpRespawnFuncs =
-    [|("Random", DerpOptionAlg.random)|]
+let derpSpawnFuncs =
+    [| ("Random", DerpOptionAlg.random) |]
 
-/// Flags for how fast the world updates (in milliseconds per frame).
-type GenSpeed =
-    | FastestNoDisp = 0
-    | Fastest       = 1
-    | Faster        = 125
-    | Fast          = 250
-    | Normal        = 500
-    | Slow          = 1000
-    | Slowest       = 2000
+let genSpeeds =
+    [| ("Paused",              -1);
+       ("Fastest (No Display)", 0);
+       ("Fastest",              1);
+       ("Faster",             125);
+       ("Fast",               250);
+       ("Normal",             500);
+       ("Slow",              1000);
+       ("Slowest",           2000) |]
 
-/// Represents a complete set of options for a World.
-type OptionSet (worldSize : int * int, derpPairCount : int, stateCount : int, 
-                growthOption : string, plantRespawnOption : string,
-                derpRespawnOption : string, speed : GenSpeed,
-                mutationThreshold : float, plantRespawnThreshold : float) =
+/// Module containing general world options
+module GeneralOptions =
+    type T = { worldSize        : int * int;
+               derpCount        : int;
+               mutable genSpeed : string }
 
-    let mutable speed = speed
-    let mutable plantGrowthFunc = growthOption |> mappedBy plantGrowthFuncs
-    let mutable plantRespawnFunc = plantRespawnOption |> mappedBy plantRespawnFuncs
-    let mutable derpRespawnFunc = derpRespawnOption |> mappedBy derpRespawnFuncs
+    let create size pairCount speed = 
+        { worldSize = size; 
+          derpCount = pairCount * 2; 
+          genSpeed  = speed }
 
-    /// The square side length of the world.
-    member this.WorldSize = worldSize
+    /// The combined width and height of a the world
+    let size options = options.worldSize
 
-    /// The number of Derps in the world.
-    member this.DerpCount = 
-        let derpcount = derpPairCount * 2
-        if derpcount >= (this.WorldSize |> (fun (x, y) -> x*y)) 
-            then failwith "Too many derps for world size"
-        else derpcount
+    /// The number of pairs of derps in the world
+    let derpCount options = options.derpCount
 
-    /// The number of states for each Derp's brain.
-    member this.StateCount = stateCount
+    /// The speed (in milliseconds per step) of world simulation.
+    let genSpeed options = options.genSpeed
+    let speedValue options = genSpeed options |> mappedBy genSpeeds
 
-    /// The function used to generate plant growth in the world.
-    member this.PlantGrowthFunc
-        with get () = plantGrowthFunc
-        and set value = plantGrowthFunc <- value
+/// Module containing options relevant to Derps in the world
+module DerpOptions =
+    type T = { genomeMutationThreshold : double;
+               codonMutationThreshold  : double;
+               dominanceThreshold      : double;
+               stateCount              : int;
+               spawnOption             : string }
 
-    /// The function used to respawn eaten plants.
-    member this.PlantRespawnFunc
-        with get () = plantRespawnFunc
-        and set value = plantRespawnFunc <- value
+    let create genomeThreshold codonThreshold dominanceThreshold stateCount respawnOption =
+        { genomeMutationThreshold = genomeThreshold;
+          codonMutationThreshold  = codonThreshold;
+          dominanceThreshold      = dominanceThreshold;
+          stateCount              = stateCount;
+          spawnOption             = respawnOption }
 
-    /// The function used to respawn derps after a generation.
-    member this.DerpRespawnFunc
-        with get () = derpRespawnFunc
-        and set value = derpRespawnFunc <- value
+    /// The likelihood of a Derp's genome being mutated during mating
+    let genomeMutationThreshold options = options.genomeMutationThreshold
 
-    /// The GenSpeed option for the world.
-    member this.Speed
-        with get () = speed
-        and set value = speed <- value
+    /// The likelihood of an individual codon within a Derp's genome being mutated during mating
+    let codonMutationThreshold options = options.codonMutationThreshold
 
-    /// The percent probability threshold for the mutation of a Derp in the world.
-    member this.MutationThreshold = mutationThreshold
+    /// The likelihood of a more fit member's genes being selected
+    /// over those of a less fit member.
+    let dominanceThreshold options = options.dominanceThreshold
 
-    /// The percent probability threshold for a plant respawning after being eaten.
-    member this.PlantRespawnThreshold = plantRespawnThreshold
+    /// The number of states in a Derp brain
+    let stateCount options = options.stateCount
+
+    /// The spawning pattern for Derps
+    let spawnOption options = options.spawnOption
+    let spawnFunc options = spawnOption options |> mappedBy derpSpawnFuncs
+
+/// Module containing options relevant to plants in the world
+module PlantOptions =
+    type T = { respawnThreshold : double;
+               growthOption     : string;
+               respawnOption    : string }
+
+    let create respawnThreshold growth respawn =
+        { respawnThreshold = respawnThreshold;
+          growthOption     = growth;
+          respawnOption    = respawn }
+
+    /// The pattern of initial plant growth at the start of a generation
+    let growthOption options = options.growthOption
+    let growthFunc options = growthOption options |> mappedBy plantGrowthFuncs
+
+    /// The pattern of new plants spawning in the middle of a generation
+    let respawnOption options = options.respawnOption
+    let respawnFunc options = respawnOption options |> mappedBy plantRespawnFuncs
+
+    /// The likelihood of a given plant respawning after being eaten
+    let respawnThreshold options = options.respawnThreshold
+
+/// Module containing a complete set of necessary options for a world
+module CompleteOptionSet =
+    type T = { generalOptions : GeneralOptions.T;
+               derpOptions    : DerpOptions.T;
+               plantOptions   : PlantOptions.T }
+
+    let create gen derp plant =
+        { generalOptions = gen;
+          derpOptions = derp;
+          plantOptions = plant }
+    
+    /// The set of all general world options
+    let generalOptions options = options.generalOptions
+    
+    /// The set of all derp-related options
+    let derpOptions options = options.derpOptions
+
+    /// The set of all plant-related options
+    let plantOptions options = options.plantOptions

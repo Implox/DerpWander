@@ -60,7 +60,7 @@ type Tracker () =
     /// Increments the plant counter by one
     member this.SuccPlants () = plantsEaten <- plantsEaten + 1
 
-    member this.Fitness = float age
+    member this.Fitness = age
 
 
 /// Represents a Derp, a creature that walks around and tries to consume food
@@ -96,8 +96,8 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
 
     member this.Energy with get () = energy
 
-    member this.Actionsome = this.Brain.ActionMatrix |> Array2D.flatten
-    member this.Statesome = this.Brain.StateMatrix |> Array2D.flatten
+    member this.ActionGene = this.Brain.ActionMatrix |> Array2D.flatten
+    member this.StateGene = this.Brain.StateMatrix |> Array2D.flatten
 
     member this.Tracker = tracker
 
@@ -118,13 +118,18 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
 
     static member IsAlive (derp : Derp) = derp.Status = Alive
 
-    static member Mutator (dna : DNA) =
-        if rand.NextDouble () < 0.60 then
-            let i = rand.Next dna.Actionsome.Length
-            dna.Actionsome.[i] <- dna.Actionsome.[i] + rand.NextDouble ()
-        else
-            let i = rand.Next dna.Statesome.Length
-            dna.Statesome.[i] <- dna.Statesome.[i] + rand.NextDouble ()
-        { Actionsome = Array.normalize dna.Actionsome; 
-          Statesome = Array.normalize dna.Statesome; 
-          Fitness = dna.Fitness }
+    /// Mutates a given derp gene
+    static member Mutator (mutationThreshold  : double) : Genome.T -> Genome.T =
+        let mutateVal () =
+            if rand.NextDouble () < mutationThreshold then
+                rand.NextDouble ()
+            else 0.0
+
+        let mutate : Gene -> Gene = 
+            Array.map (fun codon -> codon + mutateVal ())
+            << Array.normalize
+
+        (fun genome ->
+            let actionGene = genome.ActionGene |> mutate
+            let stateGene = genome.StateGene |> mutate
+            Genome.create (actionGene, stateGene))

@@ -5,47 +5,53 @@ open System
 
 open Util
 
+type Fitness = int
+type Codon = double
+type Gene = Codon array
+
 /// Represents the genetic information of a member of a population
-type DNA = { Actionsome : double []; Statesome : double []; mutable Fitness : float; }
+module Genome =
+    type T = { ActionGene : Gene; StateGene : Gene }
+    let create (actionGene, stateGene) = { ActionGene = actionGene; StateGene = stateGene }
+    let actionGene (gene : T) = gene.ActionGene
+    let stateGene (gene : T) = gene.StateGene
 
-let dna action state fitness = { Actionsome = action; Statesome = state; Fitness = fitness}
-
-type Population = DNA list
+type Population = (Genome.T * Fitness) list
 
 /// Sorts DNAs by their fitness values (worst fitness is 0).
-let rank (population : Population) = population |> List.sortBy (fun dna -> -dna.Fitness)
+let rank : Population -> Population = List.sortBy (snd >> ((*) -1))
 
 /// Mutates the DNAs in a population using given mutator function.    
-let mutate (population : Population) mutator threshold =
-    List.take 5 population @ [for dna in List.drop 5 population do
-                                if (Random ()).NextDouble() < threshold then
-                                    yield mutator dna
-                                else yield dna]
+let mutateBy mutator codonMutationThreshold genomeMutationThreshold =
+    let mutate = mutator codonMutationThreshold
+    List.map (fun (genome : Genome.T) -> 
+        if rand.NextDouble () < genomeMutationThreshold then
+            mutate genome
+        else genome)
 
-/// Randomly selects each gene from either the first or second DNA, preferring the genes of the first because it is more fit.
-let updateVals (d1 : DNA) (d2 : DNA) =
-    let threshold = 0.90
-    let actionsome = 
-        [| for i = 0 to d1.Actionsome.Length - 1 do 
-            if (Random ()).NextDouble() < threshold then yield d1.Actionsome.[i] 
-            else yield d2.Actionsome.[i] |]
-    let statesome = 
-        [| for i = 0 to d1.Statesome.Length - 1 do 
-            if (Random ()).NextDouble() < threshold then yield d1.Statesome.[i] 
-            else yield d2.Statesome.[i] |]
-    { Actionsome = actionsome; Statesome = statesome; Fitness = 0.0; }
+/// Randomly selects each codon from either the first or second gene, preferring the codons of the first because they are more fit.
+let mateGenePair dominantPreference =
+    Array.map2 (fun aCodon bCodon -> 
+                    if rand.NextDouble () < dominantPreference then aCodon
+                    else bCodon)
 
 /// Splits a given population in half and mates all its members.
-let mate (population : Population) =
-    let partA, partB = List.splitAt (population.Length / 2) population
-    List.map2 (fun a b -> updateVals a b) partA partB
+let mate dominanceThreshold (genomes : Genome.T list) =
+    let matePair = mateGenePair dominanceThreshold
+    genomes
+    |> List.splitAt (genomes.Length / 2)
+    ||> List.map2 (fun sup sub -> (matePair sup.ActionGene sub.ActionGene, 
+                                   matePair sup.StateGene sub.StateGene))
+    |> List.map Genome.create
 
 /// Mutate the given population, then promote top members and add mated members to the end.
-let evolveStep (population : Population) mutator threshold =
+let evolve mutator codonMutationThreshold genomeMutationThreshold dominanceThreshold (population : Population) =
+    let population = rank population
     let size = population.Length
-    let mutated = mutate population mutator threshold |> rank
+    let genomes = population |> List.map fst
+    let mutated = mutateBy mutator codonMutationThreshold genomeMutationThreshold genomes
     let promoteSize = size / 5
     let keepSize = (size / 2) - promoteSize
     let xs, ys = List.splitAt keepSize mutated
-    let retVal = xs @ (List.take promoteSize ys) @ (mate mutated)
+    let retVal = xs @ (List.take promoteSize ys) @ (mate dominanceThreshold mutated)
     retVal

@@ -59,11 +59,8 @@ let rand = new Random ()
 /// Returns the integer and fractional parts of a float as (frac, int)
 let inline modf (x : float) = (x - (int >> float) x, (int >> float) x)
 
-/// Checks if a point is within the bounds of a grid
-let inline isInBounds x y width height = (0 <= x && x < width) && (0 <= y && y < height)
-
 /// Adds two tuples together
-let inline tupleAdd ((ax, ay) : Point2) ((bx, by) : Point2) = (ax + bx, ay + by)
+let inline tupleAdd (ax, ay) (bx, by) = (ax + bx, ay + by)
 
 /// Modified mod function, used for wrapping world coordinates properly
 let (%%) x m = ((x % m) + m) % m
@@ -80,7 +77,7 @@ let mappedBy map key =
 let copyBitmapRegion (srcMap : Bitmap) (region : Rectangle) =
     let newMap = new Bitmap (region.Width, region.Height)
     let g = Graphics.FromImage newMap
-    g.DrawImageUnscaledAndClipped (srcMap, Rectangle(-region.X, -region.Y, srcMap.Width, srcMap.Height))
+    g.DrawImageUnscaledAndClipped (srcMap, Rectangle (-region.X, -region.Y, srcMap.Width, srcMap.Height))
     g.Dispose ()
     newMap
 
