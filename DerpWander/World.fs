@@ -27,20 +27,20 @@ type World (optionSet : CompleteOptionSet.T, derpBrains : DerpBrain list, genera
     let derps =
         let spawnFunc = DerpOptions.spawnFunc derpOps
         spawnFunc derpBrains size
-        |> List.map (fun brainPosPair -> (brainPosPair.Pos, Derp.Derp brainPosPair.Brain))
+        |> List.map (fun (pos, brain) -> (pos, Derp.Derp brain))
         |> Array.ofList
 
     let map =
         let temp = Array2D.create width height Cell.Empty
         let grow = PlantOptions.growthFunc plantOps
-        let write value p = 
-            let x, y = wrap p
+        let write value pos = 
+            let x, y = wrap pos
             temp.[x, y] <- value
         let placeFood = write Cell.Food
         let placeDerp derp = write (Cell.Derp derp)
 
         grow size placeFood
-        derps |> Array.iter (fun (p, derp) -> placeDerp derp p)
+        derps |> Array.iter (fun (pos, derp) -> placeDerp derp pos)
         temp
 
     /// Respawns a plant using the chosen respawn function.

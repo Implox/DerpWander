@@ -16,7 +16,7 @@ type Orientation = North | South | East | West
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Orientation =
     /// Returns an orientation based on an action taken by a Derp
-    let resolveAction (action : Action) (orientation : Orientation) =
+    let resolveAction action orientation =
         match action, orientation with
         | MoveForward, _ -> orientation
         | TurnLeft,    North -> West
@@ -62,7 +62,6 @@ type Tracker () =
 
     member this.Fitness = age
 
-
 /// Represents a Derp, a creature that walks around and tries to consume food
 type Derp (brain : DerpBrain, orientation : Orientation) =
     let mutable status = Alive
@@ -84,29 +83,41 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
 
     new (brain : DerpBrain) = new Derp (brain, Orientation.randomCase ())
 
+    /// The brain of this Derp
     member this.Brain = brain
 
+    /// The current alive-dead status of this Derp
     member this.Status with get () = status
 
+    /// The current orientation of this Derp
     member this.Orientation
         with get () = orientation
         and set value = orientation <- value
 
+    /// The current state of this Derp
     member this.State with get () = state
 
+    /// The total amount of energy that this Derp has available
     member this.Energy with get () = energy
 
-    member this.ActionGene = this.Brain.ActionMatrix |> Array2D.flatten
-    member this.StateGene = this.Brain.StateMatrix |> Array2D.flatten
+    /// The flattened version of this Derp's action matrix
+    member this.ActionGene = Array2D.flatten this.Brain.ActionMatrix
 
+    /// The flattened version of this Derp's state matrix
+    member this.StateGene = Array2D.flatten this.Brain.StateMatrix
+
+    /// The tracker for this Derp
     member this.Tracker = tracker
 
+    /// Eats a plant, which gives the Derp more energy
     member this.Eat () =
         let foodEnergy = 1.0
         energy <- energy + foodEnergy
 
+    /// Sets this Derp's alive-dead status to dead
     member this.Die () = status <- Dead
 
+    /// Updates this derp based on what it sees (and what state it's in)
     member this.Update (sight : Sight) =
         let action, nextState = this.Brain.Sample state sight
         state <- nextState
@@ -116,9 +127,10 @@ type Derp (brain : DerpBrain, orientation : Orientation) =
         else energy <- energy + baseCost
         action
 
+    /// Checks if a given Derp is alive
     static member IsAlive (derp : Derp) = derp.Status = Alive
 
-    /// Mutates a given derp gene
+    /// Mutates a given Derp geneome
     static member Mutator (mutationThreshold  : double) : Genome.T -> Genome.T =
         let mutateVal () =
             if rand.NextDouble () < mutationThreshold then

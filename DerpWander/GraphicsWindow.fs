@@ -12,7 +12,9 @@ open WorldOptions
 open World
 
 let atlas = 
-    new System.Drawing.Bitmap (System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream "atlas_new.png")
+    let callingAsm = System.Reflection.Assembly.GetCallingAssembly ()
+    let atlasStream = callingAsm.GetManifestResourceStream "atlas_new.png"
+    new System.Drawing.Bitmap (atlasStream)
 
 let tileSize = 8
 
@@ -33,8 +35,11 @@ type GraphicsWindow (world : World) as this =
     inherit Form ()
     let mutable world = world
     let options = world.Options
+    let mutable prevSpeed = options.generalOptions.genSpeed
 
-    let setSpeed (newSpeed : string) = options.generalOptions.genSpeed <- newSpeed
+    let setSpeed (newSpeed : string) = 
+        prevSpeed <- options.generalOptions.genSpeed 
+        options.generalOptions.genSpeed <- newSpeed
 
     do
         this.Text <- "DerpWander"
@@ -60,7 +65,10 @@ type GraphicsWindow (world : World) as this =
     override this.OnKeyUp e =
         match e.KeyData with
         | Keys.Escape -> Environment.Exit 0
-        | Keys.Space -> setSpeed "Paused"
+        | Keys.Space -> 
+            match options.generalOptions.genSpeed with
+            | "Paused" -> setSpeed prevSpeed
+            | current -> setSpeed "Paused"
         | _ -> ()
         e.Handled <- true
 

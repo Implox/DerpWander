@@ -57,8 +57,9 @@
     <Compile Include="DerpOptionAlg.fs" />
     <Compile Include="WorldOptions.fs" />
     <Compile Include="World.fs" />
-    <Compile Include="GraphicsWindow.fs" />
     <Compile Include="InfoWindow.fs" />
+    <Compile Include="OptionsWindow.fs" />
+    <Compile Include="GraphicsWindow.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <EmbeddedResource Include="atlas_classic.png" />

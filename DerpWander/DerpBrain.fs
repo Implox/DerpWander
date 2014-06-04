@@ -86,10 +86,18 @@ type DerpBrain (stateCount : int, actionMatrix : double [,], stateMatrix : doubl
                    Array.elevate genome.ActionGene (stateCount * Sight.count) Action.count,
                    Array.elevate genome.StateGene (stateCount * Sight.count) stateCount)
 
+    /// The number of states in this brain
     member this.StateCount = stateCount
 
+    /// The matrix of probability distributions for selecting the next action
+    /// based on the current state and what is being seen by the Derp
     member this.ActionMatrix = actionMatrix
+
+    /// The matrix of probability distributions for selecting the next state
+    /// based on the current state and what is being seen by the derp
     member this.StateMatrix = stateMatrix
 
+    /// Gets the next action and the next state for the brain based on what
+    /// it sees and what state it already is in
     member this.Sample (state : State) (sight : Sight) =
         (sampleActionMatrix state sight, sampleStateMatrix state sight)
