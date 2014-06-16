@@ -85,9 +85,10 @@ let simGeneration (window : GraphicsWindow) =
 
 [<EntryPoint>]
 let main args =
-    let genOps = GeneralOptions.create (128, 96) 25 "Fastest"
-    let derpOps = DerpOptions.create 0.60 0.60 0.20 3 "Random"
-    let plantOps = PlantOptions.create 0.50 "Clumped" "Nearby"
+    if args.Length <> 12 then failwith "Invalid number of arguments"
+    let genOps = GeneralOptions.create (Int32.Parse args.[0], Int32.Parse args.[1]) (Int32.Parse args.[2]) args.[3]
+    let derpOps = DerpOptions.create (Double.Parse args.[4]) (Double.Parse args.[5]) (Double.Parse args.[6]) (Int32.Parse args.[7]) args.[8]
+    let plantOps = PlantOptions.create (Double.Parse args.[9]) args.[10] args.[11]
     let options = CompleteOptionSet.create genOps derpOps plantOps
 
     let world = new World (options)

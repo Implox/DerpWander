@@ -11,6 +11,7 @@
     <AssemblyName>DerpWander</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>DerpWander</Name>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +25,9 @@
     <DocumentationFile>bin\Debug\DerpWander.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <NoWarn>25</NoWarn>
+    <StartArguments>128 96 25 "Fastest" 0.60 0.60 0.20 3 "Random" 0.50 "Clumped" "Nearby"</StartArguments>
+    <StartAction>Project</StartAction>
+    <StartProgram>.\bin\debug\DerpStart.bat</StartProgram>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -61,6 +65,7 @@
     <Compile Include="OptionsWindow.fs" />
     <Compile Include="GraphicsWindow.fs" />
     <Compile Include="Program.fs" />
+    <None Include="DerpStart.bat" />
     <None Include="App.config" />
     <EmbeddedResource Include="atlas_classic.png" />
     <EmbeddedResource Include="atlas_new.png" />
@@ -69,6 +74,9 @@
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>COPY "$(ProjectDir)DerpStart.bat" "$(TargetDir)"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
