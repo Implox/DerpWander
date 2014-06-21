@@ -23,3 +23,4 @@ Argument explanations
 10. (double): plant respawn threshold
 11. (string): plant growth pattern
 12. (string): plant respawn options
+(optional) 13. (string): file name to log to

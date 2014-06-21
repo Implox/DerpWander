@@ -1,6 +1,7 @@
 ﻿module Program
 
 open System
+open System.IO
 open System.Windows.Forms
 open Util
 open GeneticAlg
@@ -9,6 +10,9 @@ open Derp
 open WorldOptions
 open World
 open GraphicsWindow
+
+/// The StreamWriter that logs information to the specified log file
+let mutable logging = StreamWriter.Null
 
 /// The number of generations to skip before printing information to the console.
 let timeChunk = 250
@@ -26,6 +30,12 @@ let printInfo gen avg best longAvg bestAvg =
     printfn "Best (days): %i" best
     printfn "%i-Generation Average (days): %.2f" timeChunk longAvg
     printfn "%i-Generation Best Average (days): %.2f\n" timeChunk bestAvg
+
+/// Logs relevant generation information
+let logInfo gen avg best =
+    logging.WriteLine ("Generation " + gen.ToString ())
+    logging.WriteLine ("Avg (days): " + avg.ToString ())
+    logging.WriteLine ("Best (days): " + best.ToString ())
 
 /// Updates a population for the next generation
 let nextGeneration (world : World) = 
@@ -51,6 +61,7 @@ let nextGeneration (world : World) =
         let longAvg = if world.Generation >= timeChunk then longAverage |> Array.average else Double.NaN
         let bestAvg = if world.Generation >= timeChunk then bestAverage |> Array.average else Double.NaN
 
+        if logging <> null then logInfo gen avg best
         if (speedVal = 0 && world.Generation % timeChunk = 0) || (speedVal <> 0)
             then printInfo gen avg best longAvg bestAvg
 
@@ -85,11 +96,14 @@ let simGeneration (window : GraphicsWindow) =
 
 [<EntryPoint>]
 let main args =
-    if args.Length <> 12 then failwith "Invalid number of arguments"
+    if args.Length < 12 || args.Length > 13 then failwith "Invalid number of arguments"
     let genOps = GeneralOptions.create (Int32.Parse args.[0], Int32.Parse args.[1]) (Int32.Parse args.[2]) args.[3]
     let derpOps = DerpOptions.create (Double.Parse args.[4]) (Double.Parse args.[5]) (Double.Parse args.[6]) (Int32.Parse args.[7]) args.[8]
     let plantOps = PlantOptions.create (Double.Parse args.[9]) args.[10] args.[11]
     let options = CompleteOptionSet.create genOps derpOps plantOps
+    if args.Length = 13 then
+        logging <- File.CreateText (args.[12])
+        logging.WriteLine ("parameters:" + (Array.fold (fun acc x -> acc + " " + x) "" args))
 
     let world = new World (options)
     let window = new GraphicsWindow (world)
